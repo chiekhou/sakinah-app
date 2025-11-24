@@ -71,6 +71,10 @@ dependencies:
   
   # Animations
   animate_do: ^3.1.2
+  confetti: ^0.7.0
+
+  # Markdown
+  flutter_markdown: ^0.6.18
 
 
 dev_dependencies:

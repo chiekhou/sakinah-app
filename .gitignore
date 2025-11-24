@@ -4,6 +4,7 @@
 .env.*.local
 *.pem
 *.key
+docker-compose.yml
 
 # Node.js
 node_modules/

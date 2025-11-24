@@ -8,8 +8,7 @@ class ChatController {
    */
   async sendMessage(req, res) {
     try {
-      const { message, mood_context } = req.body;
-      const userId = req.user.id; // Ajouté par le middleware d'auth
+      const { message, mood_context, user_id } = req.body;
 
       if (!message || message.trim().length === 0) {
         return res
@@ -17,12 +16,16 @@ class ChatController {
           .json({ error: "Le message ne peut pas être vide" });
       }
 
+      // Supporter les utilisateurs anonymes
+      // Si user_id est fourni, on l'utilise, sinon on crée un ID temporaire
+      const finalUserId = user_id || `anonymous_${Date.now()}`;
+
       // Récupérer ou créer la conversation
-      let conversation = await Conversation.findOne({ user_id: userId });
+      let conversation = await Conversation.findOne({ user_id: finalUserId });
 
       if (!conversation) {
         conversation = new Conversation({
-          user_id: userId,
+          user_id: finalUserId,
           messages: [],
         });
       }
@@ -72,10 +75,13 @@ class ChatController {
    */
   async getHistory(req, res) {
     try {
-      const userId = req.user.id;
-      const { limit = 50 } = req.query;
+      const { user_id, limit = 50 } = req.query;
 
-      const conversation = await Conversation.findOne({ user_id: userId });
+      if (!user_id) {
+        return res.status(400).json({ error: "user_id requis" });
+      }
+
+      const conversation = await Conversation.findOne({ user_id });
 
       if (!conversation) {
         return res.json({ messages: [] });
@@ -99,9 +105,13 @@ class ChatController {
    */
   async clearHistory(req, res) {
     try {
-      const userId = req.user.id;
+      const { user_id } = req.body;
 
-      await Conversation.deleteOne({ user_id: userId });
+      if (!user_id) {
+        return res.status(400).json({ error: "user_id requis" });
+      }
+
+      await Conversation.deleteOne({ user_id });
 
       res.json({ message: "Historique supprimé avec succès" });
     } catch (error) {

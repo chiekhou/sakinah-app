@@ -128,41 +128,27 @@ class ApiService {
     }
   }
 
-  // ==================== CONTENUS ====================
+  // ==================== QUIZ ====================
 
-  /// Obtenir les contenus recommandés selon l'humeur
-  Future<Map<String, dynamic>> getRecommendedContent({
-    required int moodLevel,
-    String? token,
-  }) async {
-    final response = await _client.get(
-      Uri.parse('$baseUrl/content/recommended?mood=$moodLevel'),
-      headers: _getHeaders(token: token),
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Erreur lors de la récupération des contenus');
-    }
-  }
-
-  /// Obtenir la liste des quiz
-  Future<List<dynamic>> getQuizzes({String? token}) async {
+  /// Obtenir tous les quiz
+  Future<Map<String, dynamic>> getQuizzes({String? token}) async {
     final response = await _client.get(
       Uri.parse('$baseUrl/quizzes'),
       headers: _getHeaders(token: token),
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body)['quizzes'];
+      return jsonDecode(response.body);
     } else {
       throw Exception('Erreur lors de la récupération des quiz');
     }
   }
 
   /// Obtenir un quiz spécifique
-  Future<Map<String, dynamic>> getQuiz(String quizId, {String? token}) async {
+  Future<Map<String, dynamic>> getQuizById(
+    String quizId, {
+    String? token,
+  }) async {
     final response = await _client.get(
       Uri.parse('$baseUrl/quizzes/$quizId'),
       headers: _getHeaders(token: token),
@@ -175,22 +161,103 @@ class ApiService {
     }
   }
 
-  /// Soumettre les réponses d'un quiz
+  /// Soumettre un quiz
   Future<Map<String, dynamic>> submitQuiz({
     required String quizId,
-    required Map<String, dynamic> answers,
+    required Map<int, int> answers,
     String? token,
   }) async {
     final response = await _client.post(
       Uri.parse('$baseUrl/quizzes/$quizId/submit'),
       headers: _getHeaders(token: token),
-      body: jsonEncode({'answers': answers}),
+      body: jsonEncode({'answers': answers, 'user_id': token}),
     );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
       throw Exception('Erreur lors de la soumission du quiz');
+    }
+  }
+
+  // ==================== CONTENUS ====================
+
+  /// Obtenir les contenus recommandés selon l'humeur
+  Future<Map<String, dynamic>> getRecommendedContent({
+    required int mood,
+    String? token,
+  }) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/content/recommended?mood=$mood'),
+      headers: _getHeaders(token: token),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erreur lors de la récupération des recommandations');
+    }
+  }
+
+  /// Obtenir tous les articles
+  Future<Map<String, dynamic>> getArticles({String? token}) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/content/articles'),
+      headers: _getHeaders(token: token),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erreur lors de la récupération des articles');
+    }
+  }
+
+  /// Obtenir un article spécifique
+  Future<Map<String, dynamic>> getArticle(
+    String articleId, {
+    String? token,
+  }) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/content/articles/$articleId'),
+      headers: _getHeaders(token: token),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erreur lors de la récupération de l\'article');
+    }
+  }
+
+  /// Obtenir tous les scénarios
+  Future<Map<String, dynamic>> getScenarios({String? token}) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/content/scenarios'),
+      headers: _getHeaders(token: token),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erreur lors de la récupération des scénarios');
+    }
+  }
+
+  /// Obtenir un scénario spécifique
+  Future<Map<String, dynamic>> getScenario(
+    String scenarioId, {
+    String? token,
+  }) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/content/scenarios/$scenarioId'),
+      headers: _getHeaders(token: token),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erreur lors de la récupération du scénario');
     }
   }
 

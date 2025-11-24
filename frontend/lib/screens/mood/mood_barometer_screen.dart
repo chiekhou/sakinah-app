@@ -4,7 +4,9 @@ import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/providers/mood_provider.dart';
 
 class MoodBarometerScreen extends StatefulWidget {
-  const MoodBarometerScreen({super.key});
+  final Function(int)? onMoodSelected;
+
+  const MoodBarometerScreen({super.key, this.onMoodSelected});
 
   @override
   State<MoodBarometerScreen> createState() => _MoodBarometerScreenState();
@@ -39,16 +41,20 @@ class _MoodBarometerScreenState extends State<MoodBarometerScreen> {
           : _noteController.text.trim(),
     );
 
-    // Navigation vers l'écran principal avec contenu adapté
-    // TODO: Implémenter la navigation
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Humeur enregistrée ! ${AppTheme.getMoodEmoji(selectedMood!)}',
+    // Appeler le callback si fourni
+    if (widget.onMoodSelected != null) {
+      widget.onMoodSelected!(selectedMood!);
+    } else {
+      // Navigation par défaut si pas de callback
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Humeur enregistrée ! ${AppTheme.getMoodEmoji(selectedMood!)}',
+          ),
+          backgroundColor: AppTheme.getMoodColor(selectedMood!),
         ),
-        backgroundColor: AppTheme.getMoodColor(selectedMood!),
-      ),
-    );
+      );
+    }
   }
 
   @override
@@ -121,69 +127,88 @@ class _MoodBarometerScreenState extends State<MoodBarometerScreen> {
     return Column(
       children: [
         // Échelle visuelle
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(7, (index) {
-            final moodLevel = index + 1;
-            final isSelected = selectedMood == moodLevel;
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Calculer la taille dynamique en fonction de l'espace disponible
+            final availableWidth = constraints.maxWidth;
+            final spacing = 4.0; // Espacement entre les cercles
+            final totalSpacing = spacing * 6; // 6 espacements pour 7 cercles
+            final circleSize = (availableWidth - totalSpacing) / 7;
+            final selectedSize =
+                circleSize * 1.15; // 15% plus grand quand sélectionné
 
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  selectedMood = moodLevel;
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: isSelected ? 60 : 48,
-                height: isSelected ? 60 : 48,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppTheme.getMoodColor(moodLevel)
-                      : Colors.grey[200],
-                  shape: BoxShape.circle,
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: AppTheme.getMoodColor(
-                              moodLevel,
-                            ).withOpacity(0.4),
-                            blurRadius: 12,
-                            spreadRadius: 2,
-                          ),
-                        ]
-                      : [],
-                ),
-                child: Center(
-                  child: Text(
-                    AppTheme.getMoodEmoji(moodLevel),
-                    style: TextStyle(fontSize: isSelected ? 32 : 24),
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(7, (index) {
+                final moodLevel = index + 1;
+                final isSelected = selectedMood == moodLevel;
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedMood = moodLevel;
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: isSelected ? selectedSize : circleSize,
+                    height: isSelected ? selectedSize : circleSize,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppTheme.getMoodColor(moodLevel)
+                          : Colors.grey[200],
+                      shape: BoxShape.circle,
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: AppTheme.getMoodColor(
+                                  moodLevel,
+                                ).withOpacity(0.4),
+                                blurRadius: 12,
+                                spreadRadius: 2,
+                              ),
+                            ]
+                          : [],
+                    ),
+                    child: Center(
+                      child: Text(
+                        AppTheme.getMoodEmoji(moodLevel),
+                        style: TextStyle(
+                          fontSize: isSelected
+                              ? (selectedSize * 0.5).clamp(20, 32)
+                              : (circleSize * 0.5).clamp(16, 24),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              }),
             );
-          }),
+          },
         ),
 
         const SizedBox(height: 16),
 
         // Labels
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Très mal',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: AppTheme.textLight),
-            ),
-            Text(
-              'Excellent',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: AppTheme.textLight),
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Très mal',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppTheme.textLight),
+              ),
+              Text(
+                'Excellent',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppTheme.textLight),
+              ),
+            ],
+          ),
         ),
 
         // Label de l'humeur sélectionnée
@@ -203,11 +228,15 @@ class _MoodBarometerScreenState extends State<MoodBarometerScreen> {
                   style: const TextStyle(fontSize: 24),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  'Tu te sens ${AppTheme.getMoodLabel(selectedMood!).toLowerCase()}',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.textPrimary,
-                    fontWeight: FontWeight.w600,
+                Flexible(
+                  // Ajouté Flexible pour éviter le débordement du texte
+                  child: Text(
+                    'Tu te sens ${AppTheme.getMoodLabel(selectedMood!).toLowerCase()}',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppTheme.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

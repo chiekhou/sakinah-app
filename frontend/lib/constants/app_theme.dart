@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Couleurs principales
-  static const Color primaryColor = Color(0xFF6B4CE6); // Violet doux
-  static const Color secondaryColor = Color(0xFF50C878); // Vert menthe
-  static const Color accentColor = Color(0xFFFFB347); // Orange pastel
-  static const Color backgroundColor = Color(0xFFF8F9FA);
+  // Couleurs principales - Vert espoir
+  static const Color primaryColor = Color(0xFF2ECC71); // Vert espoir vif
+  static const Color primaryLightColor = Color(0xFF58D68D); // Vert clair
+  static const Color primaryDarkColor = Color(0xFF27AE60); // Vert foncé
+  static const Color secondaryColor = Color(0xFF3498DB); // Bleu apaisant
+  static const Color accentColor = Color(0xFFF39C12); // Orange chaleureux
+  static const Color backgroundColor = Color(0xFFF8FAF9);
   static const Color cardColor = Colors.white;
 
   // Couleurs d'humeur
@@ -15,14 +17,21 @@ class AppTheme {
     3: Color(0xFFB8A5C6), // Pas top - Violet clair
     4: Color(0xFFA8C5E3), // Neutre - Bleu clair
     5: Color(0xFF95D5B2), // Bien - Vert clair
-    6: Color(0xFF74C69D), // Très bien - Vert
-    7: Color(0xFF52B788), // Excellent - Vert vif
+    6: Color(0xFF52B788), // Très bien - Vert
+    7: Color(0xFF2ECC71), // Excellent - Vert vif
   };
 
+  // Couleurs de statut
+  static const Color successColor = Color(0xFF2ECC71);
+  static const Color warningColor = Color(0xFFF39C12);
+  static const Color errorColor = Color(0xFFE74C3C);
+  static const Color infoColor = Color(0xFF3498DB);
+
   // Texte
-  static const Color textPrimary = Color(0xFF2D3748);
-  static const Color textSecondary = Color(0xFF718096);
-  static const Color textLight = Color(0xFFA0AEC0);
+  static const Color textPrimary = Color(0xFF2C3E50);
+  static const Color textSecondary = Color(0xFF7F8C8D);
+  static const Color textLight = Color(0xFFBDC3C7);
+  static const Color textOnPrimary = Colors.white;
 
   // Thème clair
   static ThemeData lightTheme = ThemeData(
@@ -30,6 +39,8 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: primaryColor,
       brightness: Brightness.light,
+      primary: primaryColor,
+      secondary: secondaryColor,
     ),
     scaffoldBackgroundColor: backgroundColor,
 
@@ -49,6 +60,7 @@ class AppTheme {
     cardTheme: CardThemeData(
       color: cardColor,
       elevation: 2,
+      shadowColor: primaryColor.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
 
@@ -57,6 +69,18 @@ class AppTheme {
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 2,
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+    ),
+
+    // Boutons outline
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: primaryColor,
+        side: const BorderSide(color: primaryColor, width: 2),
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -86,6 +110,18 @@ class AppTheme {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
 
+    // Floating Action Button
+    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      backgroundColor: primaryColor,
+      foregroundColor: Colors.white,
+      elevation: 4,
+    ),
+
+    // Progress Indicator
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: primaryColor,
+    ),
+
     // Typography
     textTheme: const TextTheme(
       displayLarge: TextStyle(
@@ -108,12 +144,25 @@ class AppTheme {
         fontWeight: FontWeight.w600,
         color: textPrimary,
       ),
+      titleLarge: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: textPrimary,
+      ),
       bodyLarge: TextStyle(fontSize: 16, color: textPrimary),
       bodyMedium: TextStyle(fontSize: 14, color: textSecondary),
+      labelLarge: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: textPrimary,
+      ),
     ),
 
     // Icônes
     iconTheme: const IconThemeData(color: textPrimary, size: 24),
+
+    // Divider
+    dividerTheme: DividerThemeData(color: Colors.grey[300], thickness: 1),
   );
 
   // Méthode helper pour obtenir la couleur selon l'humeur
@@ -148,4 +197,18 @@ class AppTheme {
     };
     return moodLabels[moodLevel] ?? 'Neutre';
   }
+
+  // Gradient pour les cartes
+  static LinearGradient primaryGradient = const LinearGradient(
+    colors: [primaryColor, primaryLightColor],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // Gradient de succès
+  static LinearGradient successGradient = const LinearGradient(
+    colors: [Color(0xFF2ECC71), Color(0xFF27AE60)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }
