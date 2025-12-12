@@ -100,12 +100,17 @@ class ApiService {
   Future<void> saveMood({
     required int moodLevel,
     String? note,
+    String? userId,
     String? token,
   }) async {
     final response = await _client.post(
       Uri.parse('$baseUrl/mood'),
       headers: _getHeaders(token: token),
-      body: jsonEncode({'mood_level': moodLevel, 'note': note}),
+      body: jsonEncode({
+        'mood_level': moodLevel,
+        'note': note,
+        'user_id': userId,
+      }),
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
@@ -114,9 +119,13 @@ class ApiService {
   }
 
   /// Obtenir l'historique d'humeur
-  Future<List<MoodEntry>> getMoodHistory({String? token}) async {
+  Future<List<MoodEntry>> getMoodHistory({
+    required String userId,
+    int limit = 30,
+    String? token,
+  }) async {
     final response = await _client.get(
-      Uri.parse('$baseUrl/mood/history'),
+      Uri.parse('$baseUrl/mood/history?user_id=$userId&limit=$limit'),
       headers: _getHeaders(token: token),
     );
 
@@ -125,6 +134,41 @@ class ApiService {
       return data.map((json) => MoodEntry.fromJson(json)).toList();
     } else {
       throw Exception('Erreur lors de la récupération de l\'historique');
+    }
+  }
+
+  /// Obtenir les statistiques d'humeur
+  Future<Map<String, dynamic>> getMoodStats({
+    required String userId,
+    int days = 7,
+    String? token,
+  }) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/mood/stats?user_id=$userId&days=$days'),
+      headers: _getHeaders(token: token),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erreur lors de la récupération des statistiques');
+    }
+  }
+
+  /// Obtenir l'humeur du jour
+  Future<Map<String, dynamic>> getTodayMood({
+    required String userId,
+    String? token,
+  }) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/mood/today?user_id=$userId'),
+      headers: _getHeaders(token: token),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erreur lors de la récupération de l\'humeur du jour');
     }
   }
 
@@ -145,10 +189,7 @@ class ApiService {
   }
 
   /// Obtenir un quiz spécifique
-  Future<Map<String, dynamic>> getQuizById(
-    String quizId, {
-    String? token,
-  }) async {
+  Future<Map<String, dynamic>> getQuiz(String quizId, {String? token}) async {
     final response = await _client.get(
       Uri.parse('$baseUrl/quizzes/$quizId'),
       headers: _getHeaders(token: token),
@@ -165,12 +206,18 @@ class ApiService {
   Future<Map<String, dynamic>> submitQuiz({
     required String quizId,
     required Map<int, int> answers,
+    String? userId,
     String? token,
   }) async {
+    // Convertir Map<int, int> en Map<String, dynamic> pour JSON
+    final answersJson = answers.map(
+      (key, value) => MapEntry(key.toString(), value),
+    );
+
     final response = await _client.post(
       Uri.parse('$baseUrl/quizzes/$quizId/submit'),
       headers: _getHeaders(token: token),
-      body: jsonEncode({'answers': answers, 'user_id': token}),
+      body: jsonEncode({'answers': answersJson, 'user_id': userId}),
     );
 
     if (response.statusCode == 200) {
@@ -261,18 +308,40 @@ class ApiService {
     }
   }
 
+  /// Obtenir un quiz spécifique
+  Future<Map<String, dynamic>> getQuizById(
+    String quizId, {
+    String? token,
+  }) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/quizzes/$quizId'),
+      headers: _getHeaders(token: token),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erreur lors de la récupération du quiz');
+    }
+  }
+
   // ==================== CHAT IA ====================
 
   /// Envoyer un message au chat
   Future<Map<String, dynamic>> sendChatMessage({
     required String message,
+    required String userId,
     int? moodContext,
     String? token,
   }) async {
     final response = await _client.post(
       Uri.parse('$baseUrl/chat/message'),
       headers: _getHeaders(token: token),
-      body: jsonEncode({'message': message, 'mood_context': moodContext}),
+      body: jsonEncode({
+        'message': message,
+        'user_id': userId,
+        'mood_context': moodContext,
+      }),
     );
 
     if (response.statusCode == 200) {
@@ -283,16 +352,33 @@ class ApiService {
   }
 
   /// Obtenir l'historique du chat
-  Future<List<dynamic>> getChatHistory({String? token}) async {
+  Future<Map<String, dynamic>> getChatHistory({
+    required String userId,
+    int limit = 50,
+    String? token,
+  }) async {
     final response = await _client.get(
-      Uri.parse('$baseUrl/chat/history'),
+      Uri.parse('$baseUrl/chat/history?user_id=$userId&limit=$limit'),
       headers: _getHeaders(token: token),
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body)['messages'];
+      return jsonDecode(response.body);
     } else {
       throw Exception('Erreur lors de la récupération de l\'historique');
+    }
+  }
+
+  /// Effacer l'historique du chat
+  Future<void> clearChatHistory({required String userId, String? token}) async {
+    final response = await _client.delete(
+      Uri.parse('$baseUrl/chat/history'),
+      headers: _getHeaders(token: token),
+      body: jsonEncode({'user_id': userId}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Erreur lors de la suppression de l\'historique');
     }
   }
 

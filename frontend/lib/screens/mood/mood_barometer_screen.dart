@@ -163,7 +163,7 @@ class _MoodBarometerScreenState extends State<MoodBarometerScreen> {
                               BoxShadow(
                                 color: AppTheme.getMoodColor(
                                   moodLevel,
-                                ).withOpacity(0.4),
+                                ).withValues(alpha: 0.4),
                                 blurRadius: 12,
                                 spreadRadius: 2,
                               ),
@@ -217,7 +217,7 @@ class _MoodBarometerScreenState extends State<MoodBarometerScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
-              color: AppTheme.getMoodColor(selectedMood!).withOpacity(0.1),
+              color: AppTheme.getMoodColor(selectedMood!).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(

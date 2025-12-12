@@ -34,6 +34,9 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
+// Servir les fichiers statiques (avatars, diplômes)
+app.use("/uploads", express.static("uploads"));
+
 // Routes
 app.get("/", (req, res) => {
   res.json({
@@ -52,14 +55,20 @@ app.get("/", (req, res) => {
 });
 
 // Importer les routes
+const adminRoutes = require("./routes/admin.routes");
+const authRoutes = require("./routes/auth.routes");
+const profileRoutes = require("./routes/profile.routes");
 const moodRoutes = require("./routes/mood.routes");
 const quizRoutes = require("./routes/quiz.routes");
 const contentRoutes = require("./routes/content.routes");
 const chatRoutes = require("./routes/chat.routes");
 const emergencyRoutes = require("./routes/emergency.routes");
-//const userRoutes = require("./routes/user.routes");
+////const userRoutes = require("./routes/user.routes");
 
 // Utiliser les routes
+app.use("/api/admin", adminRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
 app.use("/api/mood", moodRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/content", contentRoutes);

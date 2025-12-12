@@ -111,14 +111,14 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [scoreColor, scoreColor.withOpacity(0.7)],
+          colors: [scoreColor, scoreColor.withValues(alpha: 0.7)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: scoreColor.withOpacity(0.4),
+            color: scoreColor.withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -149,7 +149,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -202,7 +202,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3), width: 2),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
       ),
       child: Column(
         children: [
@@ -268,8 +268,8 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: detail.isCorrect
-              ? AppTheme.successColor.withOpacity(0.3)
-              : AppTheme.errorColor.withOpacity(0.3),
+              ? AppTheme.successColor.withValues(alpha: 0.3)
+              : AppTheme.errorColor.withValues(alpha: 0.3),
           width: 2,
         ),
       ),
@@ -335,7 +335,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.errorColor.withOpacity(0.1),
+                color: AppTheme.errorColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -367,7 +367,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.infoColor.withOpacity(0.1),
+                color: AppTheme.infoColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -405,7 +405,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),

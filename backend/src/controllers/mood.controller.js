@@ -62,14 +62,23 @@ class MoodController {
     try {
       const { user_id, limit = 30 } = req.query;
 
-      if (!user_id) {
+      // Nettoyer user_id
+      const cleanUserId =
+        user_id &&
+        user_id !== "NULL" &&
+        user_id !== "null" &&
+        user_id.trim() !== ""
+          ? user_id
+          : null;
+
+      if (!cleanUserId) {
         return res.status(400).json({
           error: "user_id requis pour récupérer l'historique",
         });
       }
 
       const moods = await MoodEntry.findAll({
-        where: { user_id },
+        where: { user_id: cleanUserId },
         order: [["timestamp", "DESC"]],
         limit: parseInt(limit),
       });
@@ -98,7 +107,16 @@ class MoodController {
     try {
       const { user_id, days = 7 } = req.query;
 
-      if (!user_id) {
+      // Nettoyer user_id pour gérer "NULL", "null", undefined, ou chaîne vide
+      const cleanUserId =
+        user_id &&
+        user_id !== "NULL" &&
+        user_id !== "null" &&
+        user_id.trim() !== ""
+          ? user_id
+          : null;
+
+      if (!cleanUserId) {
         return res.status(400).json({
           error: "user_id requis pour les statistiques",
         });
@@ -109,7 +127,7 @@ class MoodController {
 
       const moods = await MoodEntry.findAll({
         where: {
-          user_id,
+          user_id: cleanUserId,
           timestamp: {
             [require("sequelize").Op.gte]: daysAgo,
           },
@@ -170,7 +188,16 @@ class MoodController {
     try {
       const { user_id } = req.query;
 
-      if (!user_id) {
+      // Nettoyer user_id
+      const cleanUserId =
+        user_id &&
+        user_id !== "NULL" &&
+        user_id !== "null" &&
+        user_id.trim() !== ""
+          ? user_id
+          : null;
+
+      if (!cleanUserId) {
         return res.json({ hasMoodToday: false });
       }
 
@@ -179,7 +206,7 @@ class MoodController {
 
       const todayMood = await MoodEntry.findOne({
         where: {
-          user_id,
+          user_id: cleanUserId,
           timestamp: {
             [require("sequelize").Op.gte]: today,
           },

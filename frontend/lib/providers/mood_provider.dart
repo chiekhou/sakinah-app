@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sakinah_app/services/api_service.dart';
+import 'package:sakinah_app/services/user_service.dart';
 
 class MoodProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
+  final UserService _userService = UserService();
 
   int? currentMood;
   String? currentNote;
@@ -15,11 +17,18 @@ class MoodProvider with ChangeNotifier {
       isLoading = true;
       notifyListeners();
 
+      // Récupérer automatiquement l'UUID de l'utilisateur
+      final userId = await _userService.getUserId();
+
       currentMood = moodLevel;
       currentNote = note;
 
-      // Appel API
-      await _apiService.saveMood(moodLevel: moodLevel, note: note);
+      // Appel API avec userId
+      await _apiService.saveMood(
+        moodLevel: moodLevel,
+        note: note,
+        userId: userId,
+      );
 
       // Rafraîchir l'historique
       await fetchMoodHistory();
@@ -39,7 +48,10 @@ class MoodProvider with ChangeNotifier {
       isLoading = true;
       notifyListeners();
 
-      final history = await _apiService.getMoodHistory();
+      // Récupérer automatiquement l'UUID de l'utilisateur
+      final userId = await _userService.getUserId();
+
+      final history = await _apiService.getMoodHistory(userId: userId);
       moodHistory = history;
 
       isLoading = false;

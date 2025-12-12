@@ -5,7 +5,8 @@ import 'package:sakinah_app/screens/quiz/quiz_details_screen.dart';
 import 'package:sakinah_app/services/api_service.dart';
 
 class QuizListScreen extends StatefulWidget {
-  const QuizListScreen({super.key});
+  final VoidCallback? onBackPressed;
+  const QuizListScreen({super.key, this.onBackPressed});
 
   @override
   State<QuizListScreen> createState() => _QuizListScreenState();
@@ -92,7 +93,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
         gradient: AppTheme.primaryGradient,
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.3),
+            color: AppTheme.primaryColor.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -103,10 +104,20 @@ class _QuizListScreenState extends State<QuizListScreen> {
         children: [
           Row(
             children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: widget.onBackPressed ?? () => Navigator.pop(context),
+              ),
+              const Spacer(),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -194,6 +205,10 @@ class _QuizListScreenState extends State<QuizListScreen> {
         return '💭 Émotions';
       case 'sommeil':
         return '😴 Sommeil';
+      case 'sante_mentale':
+        return '🧠 Santé mentale';
+      case 'conflit':
+        return '🤝 Conflit';
       default:
         return theme;
     }
@@ -248,7 +263,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: AppTheme.primaryColor.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -363,7 +378,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

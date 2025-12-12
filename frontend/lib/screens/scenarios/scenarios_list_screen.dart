@@ -5,7 +5,8 @@ import 'package:sakinah_app/screens/scenarios/scenario_details_screen.dart';
 import 'package:sakinah_app/services/api_service.dart';
 
 class ScenarioListScreen extends StatefulWidget {
-  const ScenarioListScreen({super.key});
+  final VoidCallback? onBackPressed;
+  const ScenarioListScreen({super.key, this.onBackPressed});
 
   @override
   State<ScenarioListScreen> createState() => _ScenarioListScreenState();
@@ -91,45 +92,60 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
         gradient: AppTheme.primaryGradient,
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.3),
+            color: AppTheme.primaryColor.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.theater_comedy_rounded,
-              color: Colors.white,
-              size: 32,
-            ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: widget.onBackPressed ?? () => Navigator.pop(context),
+              ),
+              const Spacer(),
+            ],
           ),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Mises en situation',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                Text(
-                  'Pratique et apprends',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
+                child: const Icon(
+                  Icons.theater_comedy_rounded,
+                  color: Colors.white,
+                  size: 32,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Mises en situation',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Pratique et apprends',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -178,14 +194,20 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
 
   String _getThemeLabel(String theme) {
     switch (theme) {
-      case 'harcelement':
-        return '🛡️ Harcèlement';
       case 'stress':
         return '😰 Stress';
-      case 'conflit':
-        return '🤝 Conflit';
+      case 'estime':
+        return '💪 Estime de soi';
+      case 'harcelement':
+        return '🛡️ Harcèlement';
       case 'emotions':
         return '💭 Émotions';
+      case 'sommeil':
+        return '😴 Sommeil';
+      case 'sante_mentale':
+        return '🧠 Santé mentale';
+      case 'conflit':
+        return '🤝 Conflit';
       default:
         return theme;
     }
@@ -246,7 +268,7 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: AppTheme.primaryColor.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -282,7 +304,7 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(

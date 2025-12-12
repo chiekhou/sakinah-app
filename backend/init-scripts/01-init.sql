@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Table des entrées d'humeur
 CREATE TABLE IF NOT EXISTS mood_entries (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
-    user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    user_id UUID,
     mood_level INTEGER NOT NULL CHECK (
         mood_level >= 1
         AND mood_level <= 7
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS quizzes (
 -- Table des résultats de quiz
 CREATE TABLE IF NOT EXISTS quiz_results (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
-    user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    user_id UUID,
     quiz_id UUID NOT NULL REFERENCES quizzes (id) ON DELETE CASCADE,
     score INTEGER NOT NULL,
     answers JSONB,
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS badges (
 
 -- Table de liaison utilisateurs-badges
 CREATE TABLE IF NOT EXISTS user_badges (
-    user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    user_id UUID NOT NULL,
     badge_id UUID NOT NULL REFERENCES badges (id) ON DELETE CASCADE,
     unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, badge_id)

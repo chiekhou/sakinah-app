@@ -5,7 +5,8 @@ import 'package:sakinah_app/screens/articles/articles_details_screen.dart';
 import 'package:sakinah_app/services/api_service.dart';
 
 class ArticleListScreen extends StatefulWidget {
-  const ArticleListScreen({super.key});
+  final VoidCallback? onBackPressed;
+  const ArticleListScreen({super.key, this.onBackPressed});
 
   @override
   State<ArticleListScreen> createState() => _ArticleListScreenState();
@@ -91,45 +92,60 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
         gradient: AppTheme.primaryGradient,
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.3),
+            color: AppTheme.primaryColor.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.article_rounded,
-              color: Colors.white,
-              size: 32,
-            ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: widget.onBackPressed ?? () => Navigator.pop(context),
+              ),
+              const Spacer(),
+            ],
           ),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Articles',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                Text(
-                  'Apprends et découvre',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
+                child: const Icon(
+                  Icons.article_rounded,
+                  color: Colors.white,
+                  size: 32,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Articles',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Apprends et découvre',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -190,6 +206,8 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
         return '💭 Émotions';
       case 'sommeil':
         return '😴 Sommeil';
+      case 'sante_mentale':
+        return '🧠 Santé mentale';
       case 'conflit':
         return '🤝 Conflit';
       default:
@@ -287,7 +305,7 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryColor.withOpacity(0.3),
+              color: AppTheme.primaryColor.withValues(alpha: 0.3),
               blurRadius: 15,
               offset: const Offset(0, 5),
             ),
@@ -305,7 +323,7 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Row(
@@ -360,14 +378,14 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
                         Icon(
                           Icons.access_time_rounded,
                           size: 16,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '${article.readingTimeMinutes} min de lecture',
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
                       ],
@@ -398,7 +416,7 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: AppTheme.primaryColor.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),

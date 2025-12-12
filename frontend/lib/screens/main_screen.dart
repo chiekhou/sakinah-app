@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sakinah_app/screens/chat/chat_screen.dart';
 import 'package:sakinah_app/screens/quiz/quiz_list_screen.dart';
 import 'package:sakinah_app/screens/articles/articles_list_screen.dart';
 import 'package:sakinah_app/screens/scenarios/scenarios_list_screen.dart';
@@ -24,9 +25,34 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _screens = [
       HomeScreen(mood: widget.initialMood),
-      const QuizListScreen(),
-      const ArticleListScreen(),
-      const ScenarioListScreen(),
+      QuizListScreen(
+        onBackPressed: () {
+          setState(() {
+            _currentIndex = 0;
+          });
+        },
+      ),
+      ArticleListScreen(
+        onBackPressed: () {
+          setState(() {
+            _currentIndex = 0;
+          });
+        },
+      ),
+      ScenarioListScreen(
+        onBackPressed: () {
+          setState(() {
+            _currentIndex = 0;
+          });
+        },
+      ),
+      ChatScreen(
+        onBackPressed: () {
+          setState(() {
+            _currentIndex = 0;
+          });
+        },
+      ),
     ];
   }
 
@@ -38,7 +64,7 @@ class _MainScreenState extends State<MainScreen> {
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -74,6 +100,10 @@ class _MainScreenState extends State<MainScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.theater_comedy_rounded),
               label: 'Scénarios',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble_rounded),
+              label: 'Chat IA',
             ),
           ],
         ),
