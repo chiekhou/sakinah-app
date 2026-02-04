@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sakinah_app/services/api_service.dart';
+import 'package:sakinah_app/services/user_service.dart';
 
 class AuthProvider with ChangeNotifier {
-  final ApiService _apiService = ApiService();
-
   String? _token;
-  User? _currentUser;
+  Map<String, dynamic>? _currentUser;
   bool _isAuthenticated = false;
   bool _isLoading = true;
 
   String? get token => _token;
-  User? get currentUser => _currentUser;
+  Map<String, dynamic>? get currentUser => _currentUser;
   bool get isAuthenticated => _isAuthenticated;
   bool get isLoading => _isLoading;
 
@@ -21,14 +19,19 @@ class AuthProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      final prefs = await SharedPreferences.getInstance();
-      _token = prefs.getString('auth_token');
+      _token = await ApiService.getToken();
 
       if (_token != null) {
         // Vérifier que le token est toujours valide
         try {
-          _currentUser = (await _apiService.getCurrentUser(_token!)) as User?;
-          _isAuthenticated = true;
+          final result = await ApiService.getMe();
+          if (result['success']) {
+            _currentUser = result['user'];
+            _isAuthenticated = true;
+          } else {
+            // Token invalide ou expiré
+            await logout();
+          }
         } catch (e) {
           // Token invalide ou expiré
           await logout();
@@ -44,33 +47,33 @@ class AuthProvider with ChangeNotifier {
   }
 
   /// Inscription
-  Future<void> register({
+  Future<Map<String, dynamic>> register({
     required String username,
     required String email,
     required String password,
     required String ageRange,
+    String role = 'USER',
+    String? professionalTitle,
   }) async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      final response = await _apiService.register(
+      final result = await ApiService.register(
         username: username,
         email: email,
         password: password,
         ageRange: ageRange,
+        role: role,
+        professionalTitle: professionalTitle,
       );
-
-      _token = response['token'];
-      _currentUser = User.fromJson(response['user']);
-      _isAuthenticated = true;
-
-      // Sauvegarder le token
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('auth_token', _token!);
 
       _isLoading = false;
       notifyListeners();
+
+      // Note: On ne sauvegarde pas le token ici car l'utilisateur
+      // doit d'abord vérifier son email
+      return result;
     } catch (e) {
       _isLoading = false;
       notifyListeners();
@@ -79,26 +82,26 @@ class AuthProvider with ChangeNotifier {
   }
 
   /// Connexion
-  Future<void> login({required String email, required String password}) async {
+  Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      final response = await _apiService.login(
-        email: email,
-        password: password,
-      );
+      final result = await ApiService.login(email: email, password: password);
 
-      _token = response['token'];
-      _currentUser = User.fromJson(response['user']);
-      _isAuthenticated = true;
-
-      // Sauvegarder le token
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('auth_token', _token!);
+      if (result['success']) {
+        _token = result['token'];
+        _currentUser = result['user'];
+        _isAuthenticated = true;
+      }
 
       _isLoading = false;
       notifyListeners();
+
+      return result;
     } catch (e) {
       _isLoading = false;
       notifyListeners();
@@ -112,78 +115,46 @@ class AuthProvider with ChangeNotifier {
     _currentUser = null;
     _isAuthenticated = false;
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
+    await ApiService.logout();
+
+    // Vider le cache UserService pour qu'il réinitialise l'ID au prochain appel
+    UserService().clearCache();
 
     notifyListeners();
   }
 
-  /// Mettre à jour les paramètres d'accessibilité
-  Future<void> updateAccessibilitySettings(
-    Map<String, dynamic> settings,
-  ) async {
+  /// Rafraîchir les données de l'utilisateur
+  Future<void> refreshUser() async {
     try {
-      if (_currentUser == null) return;
-
-      _currentUser = _currentUser!.copyWith(accessibilitySettings: settings);
-
-      await _apiService.updateUserSettings(_token!, settings);
-
-      notifyListeners();
+      final result = await ApiService.getMe();
+      if (result['success']) {
+        _currentUser = result['user'];
+        notifyListeners();
+      }
     } catch (e) {
-      rethrow;
+      // Ignorer les erreurs silencieusement
     }
   }
-}
 
-class User {
-  final String id;
-  final String username;
-  final String email;
-  final String ageRange;
-  final Map<String, dynamic> accessibilitySettings;
-  final DateTime? lastLogin;
-
-  User({
-    required this.id,
-    required this.username,
-    required this.email,
-    required this.ageRange,
-    required this.accessibilitySettings,
-    this.lastLogin,
-  });
-
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['id'],
-      username: json['username'],
-      email: json['email'],
-      ageRange: json['age_range'],
-      accessibilitySettings: Map<String, dynamic>.from(
-        json['accessibility_settings'] ?? {},
-      ),
-      lastLogin: json['last_login'] != null
-          ? DateTime.parse(json['last_login'])
-          : null,
-    );
+  /// Vérifier si l'utilisateur est un professionnel
+  bool get isProfessional {
+    if (_currentUser == null) return false;
+    final role = _currentUser!['role'] as String?;
+    return ['EDUCATEUR', 'PSYCHOLOGUE', 'INTERVENANT'].contains(role);
   }
 
-  User copyWith({
-    String? id,
-    String? username,
-    String? email,
-    String? ageRange,
-    Map<String, dynamic>? accessibilitySettings,
-    DateTime? lastLogin,
-  }) {
-    return User(
-      id: id ?? this.id,
-      username: username ?? this.username,
-      email: email ?? this.email,
-      ageRange: ageRange ?? this.ageRange,
-      accessibilitySettings:
-          accessibilitySettings ?? this.accessibilitySettings,
-      lastLogin: lastLogin ?? this.lastLogin,
-    );
+  /// Vérifier si le professionnel doit uploader son diplôme
+  bool get needsDiplomaUpload {
+    return _currentUser?['needs_diploma_upload'] == true;
+  }
+
+  /// Vérifier si le professionnel est en attente d'approbation
+  bool get awaitingAdminApproval {
+    return _currentUser?['awaiting_admin_approval'] == true;
+  }
+
+  /// Vérifier si le professionnel est vérifié
+  bool get isVerified {
+    return _currentUser?['is_verified'] == true;
   }
 }

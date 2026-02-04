@@ -2,9 +2,13 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const connectMongoDB = require("./config/mongodb");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Connexion à MongoDB
+connectMongoDB();
 
 // Middleware de sécurité
 app.use(helmet());
@@ -30,27 +34,55 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
+// Servir les fichiers statiques (avatars, diplômes)
+app.use("/uploads", express.static("uploads"));
+
 // Routes
 app.get("/", (req, res) => {
   res.json({
-    message: "API Sakinah la quiétude pour la santé ",
+    message: "API Bien-être Mental - Opérationnelle",
     version: "1.0.0",
     status: "healthy",
+    endpoints: {
+      users: "/api/users",
+      mood: "/api/mood",
+      quizzes: "/api/quizzes",
+      content: "/api/content",
+      chat: "/api/chat",
+      emergency: "/api/emergency",
+    },
   });
 });
 
-// TODO: Importer et utiliser les routes
-// const authRoutes = require('./routes/auth.routes');
-// const moodRoutes = require('./routes/mood.routes');
-// const contentRoutes = require('./routes/content.routes');
-// const chatRoutes = require('./routes/chat.routes');
-// const quizRoutes = require('./routes/quiz.routes');
+// Importer les routes
+////const userRoutes = require("./routes/user.routes");
+const adminRoutes = require("./routes/admin.routes");
+const adminModerationRoutes = require("./routes/admin-moderation.routes");
+const authRoutes = require("./routes/auth.routes");
+const profileRoutes = require("./routes/profile.routes");
+const moodRoutes = require("./routes/mood.routes");
+const quizRoutes = require("./routes/quiz.routes");
+const contentRoutes = require("./routes/content.routes");
+const chatRoutes = require("./routes/chat.routes");
+const emergencyRoutes = require("./routes/emergency.routes");
+const parentalConsentRoutes = require("./routes/parental-consent.routes");
+const testimonialRoutes = require("./routes/testimonial.routes");
+const notificationRoutes = require("./routes/notification.routes");
 
-// app.use('/api/auth', authRoutes);
-// app.use('/api/mood', moodRoutes);
-// app.use('/api/content', contentRoutes);
-// app.use('/api/chat', chatRoutes);
-// app.use('/api/quizzes', quizRoutes);
+// Utiliser les routes
+app.use("/api/admin", adminRoutes);
+app.use("/api/admin", adminModerationRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/auth", parentalConsentRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/mood", moodRoutes);
+app.use("/api/quizzes", quizRoutes);
+app.use("/api/content", contentRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/emergency", emergencyRoutes);
+app.use("/api/testimonials", testimonialRoutes);
+app.use("/api/notifications", notificationRoutes);
+//app.use("/api/users", userRoutes);
 
 // Gestion des erreurs 404
 app.use((req, res) => {

@@ -11,7 +11,7 @@ const MoodEntry = sequelize.define(
     },
     user_id: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: "users",
         key: "id",

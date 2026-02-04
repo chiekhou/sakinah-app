@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Table des entrées d'humeur
 CREATE TABLE IF NOT EXISTS mood_entries (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
-    user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    user_id UUID,
     mood_level INTEGER NOT NULL CHECK (
         mood_level >= 1
         AND mood_level <= 7
@@ -38,6 +38,9 @@ CREATE INDEX IF NOT EXISTS idx_mood_entries_timestamp ON mood_entries (timestamp
 CREATE INDEX IF NOT EXISTS idx_mood_entries_user_timestamp ON mood_entries (user_id, timestamp);
 
 -- Table des quiz
+
+CREATE TYPE difficultyEnum AS ENUM('facile','moyen','difficile');
+
 CREATE TABLE IF NOT EXISTS quizzes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
     title VARCHAR(255) NOT NULL,
@@ -46,6 +49,9 @@ CREATE TABLE IF NOT EXISTS quizzes (
     age_target_min INTEGER,
     age_target_max INTEGER,
     questions JSONB NOT NULL,
+    difficulty difficultyEnum DEFAULT NULL,
+    duration_minutes INTEGER,
+    mood_tags INTEGER[] DEFAULT ARRAY[]::INTEGER[],
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -53,7 +59,7 @@ CREATE TABLE IF NOT EXISTS quizzes (
 -- Table des résultats de quiz
 CREATE TABLE IF NOT EXISTS quiz_results (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
-    user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    user_id UUID,
     quiz_id UUID NOT NULL REFERENCES quizzes (id) ON DELETE CASCADE,
     score INTEGER NOT NULL,
     answers JSONB,
@@ -71,10 +77,13 @@ CREATE TABLE IF NOT EXISTS articles (
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     theme VARCHAR(100) NOT NULL,
+    summary VARCHAR(500) NOT NULL,
     mood_tags INTEGER[] DEFAULT ARRAY[]::INTEGER[],
     age_target_min INTEGER,
     age_target_max INTEGER,
+    reading_time_minutes INTEGER,
     media_url VARCHAR(500),
+    is_featured BOOLEAN  DEFAULT false,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -91,6 +100,10 @@ CREATE TABLE IF NOT EXISTS scenarios (
     description TEXT,
     theme VARCHAR(100) NOT NULL,
     steps JSONB NOT NULL,
+    age_target_min INTEGER,
+    age_target_max INTEGER,
+    duration_minutes INTEGER,
+    mood_tags INTEGER[] DEFAULT ARRAY[]::INTEGER[],
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -107,7 +120,7 @@ CREATE TABLE IF NOT EXISTS badges (
 
 -- Table de liaison utilisateurs-badges
 CREATE TABLE IF NOT EXISTS user_badges (
-    user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    user_id UUID NOT NULL,
     badge_id UUID NOT NULL REFERENCES badges (id) ON DELETE CASCADE,
     unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, badge_id)
