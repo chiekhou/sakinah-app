@@ -15,7 +15,7 @@ app.use(helmet());
 
 // CORS
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
-  "http://localhost:3000",
+  "https://sakinah-app.onrender.com",
 ];
 app.use(
   cors({
@@ -27,7 +27,7 @@ app.use(
       }
     },
     credentials: true,
-  })
+  }),
 );
 
 // Parser JSON
