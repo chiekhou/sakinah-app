@@ -4,6 +4,47 @@
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 /**
+ * Méthode générique pour envoyer un email
+ * @param {string} to - Email destinataire
+ * @param {string} subject - Sujet de l'email
+ * @param {string} html - Contenu HTML de l'email
+ */
+async function sendEmail(to, subject, html) {
+  console.log("==============================================");
+  console.log("📧 ENVOI D'EMAIL");
+  console.log("==============================================");
+  console.log(`À: ${to}`);
+  console.log(`Sujet: ${subject}`);
+  console.log("==============================================");
+  console.log("Contenu HTML:", html.substring(0, 200) + "...");
+  console.log("==============================================\n");
+
+  // TODO: Implémenter l'envoi réel d'email avec nodemailer
+  /*
+  const nodemailer = require('nodemailer');
+  
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    secure: true,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+
+  await transporter.sendMail({
+    from: '"Sakinah" <noreply@sakinah.app>',
+    to: to,
+    subject: subject,
+    html: html
+  });
+  */
+
+  return true;
+}
+
+/**
  * Envoyer un email de vérification
  */
 async function sendVerificationEmail(email, token) {
@@ -143,6 +184,7 @@ async function sendParentalConsentEmail(parentEmail, childName, consentToken) {
 }
 
 module.exports = {
+  sendEmail,
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendParentalConsentEmail,

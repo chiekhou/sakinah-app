@@ -55,7 +55,9 @@ app.get("/", (req, res) => {
 });
 
 // Importer les routes
+////const userRoutes = require("./routes/user.routes");
 const adminRoutes = require("./routes/admin.routes");
+const adminModerationRoutes = require("./routes/admin-moderation.routes");
 const authRoutes = require("./routes/auth.routes");
 const profileRoutes = require("./routes/profile.routes");
 const moodRoutes = require("./routes/mood.routes");
@@ -63,17 +65,23 @@ const quizRoutes = require("./routes/quiz.routes");
 const contentRoutes = require("./routes/content.routes");
 const chatRoutes = require("./routes/chat.routes");
 const emergencyRoutes = require("./routes/emergency.routes");
-////const userRoutes = require("./routes/user.routes");
+const parentalConsentRoutes = require("./routes/parental-consent.routes");
+const testimonialRoutes = require("./routes/testimonial.routes");
+const notificationRoutes = require("./routes/notification.routes");
 
 // Utiliser les routes
 app.use("/api/admin", adminRoutes);
+app.use("/api/admin", adminModerationRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/auth", parentalConsentRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/mood", moodRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/content", contentRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/emergency", emergencyRoutes);
+app.use("/api/testimonials", testimonialRoutes);
+app.use("/api/notifications", notificationRoutes);
 //app.use("/api/users", userRoutes);
 
 // Gestion des erreurs 404

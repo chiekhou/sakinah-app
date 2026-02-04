@@ -259,10 +259,14 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
         return '🛡️';
       case 'emotions':
         return '💭';
+      case 'famille':
+        return '🏠';
       case 'sommeil':
         return '😴';
       case 'conflit':
         return '🤝';
+      case 'sante_mentale':
+        return '🧠 ';
       default:
         return '📰';
     }
@@ -282,6 +286,10 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
         return 'Sommeil';
       case 'conflit':
         return 'Conflit';
+      case 'famille':
+        return 'Famille';
+      case 'sante_mentale':
+        return 'Santé Mentale';
       default:
         return theme;
     }
@@ -304,6 +312,15 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
       case 'harcelement':
         return const LinearGradient(
           colors: [Color(0xFFE74C3C), Color(0xFFC0392B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'famille':
+        return const LinearGradient(
+          colors: [
+            Color.fromARGB(255, 161, 219, 52),
+            Color.fromARGB(255, 161, 219, 52),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );

@@ -7,6 +7,10 @@ class ChatAIService {
       process.env.AI_API_URL || "https://api.anthropic.com/v1/messages";
     this.model = "claude-sonnet-4-20250514";
 
+    // Configuration retry
+    this.maxRetries = 3;
+    this.retryDelay = 1000; // 1 seconde
+
     // Mots-clés sensibles nécessitant une escalade
     this.emergencyKeywords = [
       "suicide",
@@ -19,6 +23,87 @@ class ChatAIService {
       "maltraitance",
       "danger",
     ];
+
+    // Messages d'erreur personnalisés
+    this.errorMessages = {
+      rate_limit: {
+        response: "Je reçois beaucoup de messages en ce moment. 😊\n\nPeux-tu réessayer dans quelques secondes ? En attendant, tu peux explorer les articles ou les quiz de l'application.",
+        retryable: true,
+      },
+      quota_exceeded: {
+        response: "Je suis temporairement indisponible. 😔\n\nMais tu peux toujours :\n• Explorer les articles et quiz\n• Faire un exercice de respiration\n• Contacter le **3114** si tu as besoin de parler à quelqu'un immédiatement.",
+        retryable: false,
+      },
+      network_error: {
+        response: "Il semble y avoir un problème de connexion. 📶\n\nVérifie ta connexion internet et réessaie. Si le problème persiste, les contenus hors-ligne de l'app sont toujours disponibles.",
+        retryable: true,
+      },
+      invalid_api_key: {
+        response: "Je rencontre un problème de configuration. 🔧\n\nL'équipe technique a été notifiée. En attendant, n'hésite pas à explorer les autres fonctionnalités de l'application.",
+        retryable: false,
+      },
+      default: {
+        response: "Je suis désolé, je rencontre une difficulté technique. 😔\n\nEn attendant, n'hésite pas à explorer les contenus de l'application ou, si tu as besoin d'aide immédiate, à contacter le 3114.",
+        retryable: false,
+      },
+    };
+  }
+
+  /**
+   * Identifie le type d'erreur à partir de la réponse API
+   */
+  getErrorType(error) {
+    const status = error.response?.status;
+    const errorCode = error.response?.data?.error?.type;
+
+    // Erreur réseau (pas de réponse)
+    if (!error.response) {
+      return "network_error";
+    }
+
+    // Rate limit (429)
+    if (status === 429) {
+      return "rate_limit";
+    }
+
+    // Authentification invalide (401)
+    if (status === 401) {
+      return "invalid_api_key";
+    }
+
+    // Quota épuisé (400 avec message spécifique ou 402)
+    if (status === 402 || (status === 400 && errorCode === "insufficient_quota")) {
+      return "quota_exceeded";
+    }
+
+    return "default";
+  }
+
+  /**
+   * Log structuré pour le monitoring
+   */
+  logError(errorType, error, context = {}) {
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      service: "ChatAI",
+      errorType,
+      statusCode: error.response?.status || null,
+      errorMessage: error.response?.data?.error?.message || error.message,
+      context,
+    };
+
+    // En production, ceci pourrait être envoyé à un service de monitoring
+    console.error("[ChatAI Error]", JSON.stringify(logEntry, null, 2));
+
+    return logEntry;
+  }
+
+  /**
+   * Attend un délai avec backoff exponentiel
+   */
+  async wait(attempt) {
+    const delay = this.retryDelay * Math.pow(2, attempt);
+    return new Promise((resolve) => setTimeout(resolve, delay));
   }
 
   /**
@@ -59,35 +144,10 @@ DIRECTIVES IMPORTANTES:
   }
 
   /**
-   * Génère une réponse de l'IA
+   * Effectue l'appel API avec retry automatique
    */
-  async generateResponse(
-    userMessage,
-    conversationHistory = [],
-    userMood = null
-  ) {
+  async callAPIWithRetry(messages, userMood, attempt = 0) {
     try {
-      // Vérification d'urgence
-      if (this.detectEmergency(userMessage)) {
-        return {
-          response: `Je comprends que tu traverses un moment très difficile. 🫂\n\nIl est vraiment important que tu parles à quelqu'un qui peut t'aider immédiatement:\n\n📞 **3114** - Prévention du suicide (gratuit, anonyme, 24h/7j)\n📞 **119** - Enfance en danger\n📞 **3020** - Non au harcèlement\n\nTu n'es pas seul(e), et ces personnes sont là pour t'écouter et t'accompagner. 💙`,
-          isEmergency: true,
-        };
-      }
-
-      // Construction des messages pour l'API
-      const messages = [
-        ...conversationHistory.map((msg) => ({
-          role: msg.role,
-          content: msg.content,
-        })),
-        {
-          role: "user",
-          content: userMessage,
-        },
-      ];
-
-      // Appel à l'API Anthropic
       const response = await axios.post(
         this.apiUrl,
         {
@@ -102,26 +162,77 @@ DIRECTIVES IMPORTANTES:
             "x-api-key": this.apiKey,
             "anthropic-version": "2023-06-01",
           },
+          timeout: 30000, // 30 secondes timeout
         }
       );
 
-      const aiResponse = response.data.content[0].text;
+      return { success: true, data: response.data };
+    } catch (error) {
+      const errorType = this.getErrorType(error);
+      const errorConfig = this.errorMessages[errorType];
 
+      // Log l'erreur
+      this.logError(errorType, error, { attempt, maxRetries: this.maxRetries });
+
+      // Retry si l'erreur est retryable et qu'on n'a pas atteint le max
+      if (errorConfig.retryable && attempt < this.maxRetries) {
+        console.log(`[ChatAI] Retry ${attempt + 1}/${this.maxRetries} après erreur ${errorType}`);
+        await this.wait(attempt);
+        return this.callAPIWithRetry(messages, userMood, attempt + 1);
+      }
+
+      return { success: false, errorType, error };
+    }
+  }
+
+  /**
+   * Génère une réponse de l'IA
+   */
+  async generateResponse(
+    userMessage,
+    conversationHistory = [],
+    userMood = null
+  ) {
+    // Vérification d'urgence (priorité absolue)
+    if (this.detectEmergency(userMessage)) {
+      return {
+        response: `Je comprends que tu traverses un moment très difficile. 🫂\n\nIl est vraiment important que tu parles à quelqu'un qui peut t'aider immédiatement:\n\n📞 **3114** - Prévention du suicide (gratuit, anonyme, 24h/7j)\n📞 **119** - Enfance en danger\n📞 **3020** - Non au harcèlement\n\nTu n'es pas seul(e), et ces personnes sont là pour t'écouter et t'accompagner. 💙`,
+        isEmergency: true,
+      };
+    }
+
+    // Construction des messages pour l'API
+    const messages = [
+      ...conversationHistory.map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      })),
+      {
+        role: "user",
+        content: userMessage,
+      },
+    ];
+
+    // Appel API avec retry automatique
+    const result = await this.callAPIWithRetry(messages, userMood);
+
+    if (result.success) {
+      const aiResponse = result.data.content[0].text;
       return {
         response: aiResponse,
         isEmergency: false,
       };
-    } catch (error) {
-      console.error("Erreur ChatAI:", error.response?.data || error.message);
-
-      // Réponse de secours en cas d'erreur API
-      return {
-        response:
-          "Je suis désolé, je rencontre une difficulté technique. 😔\n\nEn attendant, n'hésite pas à explorer les contenus de l'application ou, si tu as besoin d'aide immédiate, à contacter le 3114. Tu peux aussi réessayer dans quelques instants.",
-        isEmergency: false,
-        error: true,
-      };
     }
+
+    // Gestion de l'erreur avec message personnalisé
+    const errorConfig = this.errorMessages[result.errorType] || this.errorMessages.default;
+
+    return {
+      response: errorConfig.response,
+      isEmergency: false,
+      error: true,
+      errorType: result.errorType,
+    };
   }
 
   /**

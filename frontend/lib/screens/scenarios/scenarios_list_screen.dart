@@ -103,16 +103,6 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
         children: [
           Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: widget.onBackPressed ?? () => Navigator.pop(context),
-              ),
-              const Spacer(),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -134,7 +124,7 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
                       'Mises en situation',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 28,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -175,7 +165,7 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
-        label: Text(label),
+        label: Text(label, textAlign: TextAlign.center),
         selected: isSelected,
         onSelected: (selected) {
           _filterByTheme(selected ? theme : null);
@@ -195,19 +185,21 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
   String _getThemeLabel(String theme) {
     switch (theme) {
       case 'stress':
-        return '😰 Stress';
+        return 'Stress 😰';
       case 'estime':
-        return '💪 Estime de soi';
+        return 'Estime de soi 💪';
       case 'harcelement':
-        return '🛡️ Harcèlement';
+        return 'Harcèlement 🛡️';
+      case 'famille':
+        return 'Famille 🏠';
       case 'emotions':
-        return '💭 Émotions';
+        return 'Émotions 💭';
       case 'sommeil':
-        return '😴 Sommeil';
+        return 'Sommeil 😴';
       case 'sante_mentale':
-        return '🧠 Santé mentale';
+        return 'Santé Mentale 🧠';
       case 'conflit':
-        return '🤝 Conflit';
+        return 'Conflit 🤝';
       default:
         return theme;
     }
@@ -279,7 +271,7 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
           children: [
             // En-tête avec gradient
             Container(
-              height: 100, // Réduit de 120 à 100
+              height: 100,
               decoration: BoxDecoration(
                 gradient: _getThemeGradient(scenario.theme),
                 borderRadius: const BorderRadius.only(
@@ -292,40 +284,7 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
                   Center(
                     child: Text(
                       scenario.themeEmoji,
-                      style: const TextStyle(fontSize: 48), // Réduit de 52 à 48
-                    ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.access_time_rounded,
-                            size: 12,
-                            color: AppTheme.textPrimary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${scenario.durationMinutes}m',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
+                      style: const TextStyle(fontSize: 48),
                     ),
                   ),
                 ],
@@ -391,21 +350,42 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
 
   LinearGradient _getThemeGradient(String theme) {
     switch (theme) {
-      case 'harcelement':
-        return const LinearGradient(
-          colors: [Color(0xFFE74C3C), Color(0xFFC0392B)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
       case 'stress':
         return const LinearGradient(
           colors: [Color(0xFFFFB75E), Color(0xFFED8F03)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
-      case 'conflit':
+      case 'estime':
+        return const LinearGradient(
+          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'harcelement':
+        return const LinearGradient(
+          colors: [Color(0xFFE74C3C), Color(0xFFC0392B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'famille':
+        return const LinearGradient(
+          colors: [
+            Color.fromARGB(255, 161, 219, 52),
+            Color.fromARGB(255, 161, 219, 52),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'emotions':
         return const LinearGradient(
           colors: [Color(0xFF3498DB), Color(0xFF2980B9)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'sommeil':
+        return const LinearGradient(
+          colors: [Color(0xFF8E44AD), Color(0xFF9B59B6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );

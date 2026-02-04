@@ -41,8 +41,15 @@ const diplomaStorage = multer.diskStorage({
 // Filtre pour les images uniquement (avatars)
 const imageFilter = (req, file, cb) => {
   const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+  const allowedExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
 
+  const ext = path.extname(file.originalname).toLowerCase();
+
+  // Accepter si le mimetype est valide OU si le mimetype est générique mais l'extension est valide
   if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else if (file.mimetype === "application/octet-stream" && allowedExtensions.includes(ext)) {
+    // iOS/Flutter envoie parfois application/octet-stream pour les images
     cb(null, true);
   } else {
     cb(

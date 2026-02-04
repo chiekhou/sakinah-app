@@ -1,58 +1,69 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import 'package:sakinah_app/services/api_service.dart';
 
 class UserService {
-  static const String _userIdKey = 'user_id';
+  static const String _anonymousIdKey = 'anonymous_user_id';
   static final UserService _instance = UserService._internal();
   factory UserService() => _instance;
   UserService._internal();
 
-  String? _userId;
+  String? _cachedUserId;
   final _uuid = const Uuid();
 
-  /// Récupérer ou créer l'UUID de l'utilisateur
+  /// Récupérer l'ID utilisateur :
+  /// - Pour utilisateur connecté : utilise le vrai user.id de la base de données
+  /// - Pour utilisateur anonyme : génère/utilise un UUID local
   Future<String> getUserId() async {
-    // Si déjà en mémoire, retourner directement
-    if (_userId != null) {
-      return _userId!;
+    // 1. Vérifier si l'utilisateur est connecté
+    final userData = await ApiService.getUser();
+
+    if (userData != null && userData['id'] != null) {
+      // Utilisateur connecté → utiliser son vrai ID
+      _cachedUserId = userData['id'].toString();
+      debugPrint('🆔 Utilisateur connecté - ID: $_cachedUserId');
+      return _cachedUserId!;
     }
 
-    // Sinon, charger depuis SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
-    _userId = prefs.getString(_userIdKey);
+    // 2. Utilisateur anonyme → utiliser/créer un UUID local
+    if (_cachedUserId != null) {
+      return _cachedUserId!;
+    }
 
-    // Si pas encore d'UUID, en créer un nouveau
-    if (_userId == null) {
-      _userId = _uuid.v4();
-      await prefs.setString(_userIdKey, _userId!);
-      debugPrint('🆔 Nouvel UUID créé: $_userId');
+    // Charger l'UUID anonyme depuis SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    _cachedUserId = prefs.getString(_anonymousIdKey);
+
+    // Si pas encore d'UUID anonyme, en créer un nouveau
+    if (_cachedUserId == null) {
+      _cachedUserId = 'anonymous_${_uuid.v4()}';
+      await prefs.setString(_anonymousIdKey, _cachedUserId!);
+      debugPrint('🆔 Nouvel UUID anonyme créé: $_cachedUserId');
     } else {
-      debugPrint('🆔 UUID chargé: $_userId');
+      debugPrint('🆔 UUID anonyme chargé: $_cachedUserId');
     }
 
-    return _userId!;
+    return _cachedUserId!;
   }
 
-  /// Vérifier si l'utilisateur a déjà un UUID
-  Future<bool> hasUserId() async {
+  /// Vérifier si l'utilisateur a déjà un UUID anonyme
+  Future<bool> hasAnonymousId() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey(_userIdKey);
+    return prefs.containsKey(_anonymousIdKey);
   }
 
-  /// Réinitialiser l'UUID (pour les tests ou déconnexion)
-  Future<void> resetUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_userIdKey);
-    _userId = null;
-    debugPrint('🗑️ UUID supprimé');
+  /// Réinitialiser le cache (utile après déconnexion)
+  void clearCache() {
+    _cachedUserId = null;
+    debugPrint('🗑️ Cache utilisateur vidé');
   }
 
-  /// Définir manuellement un UUID (pour migration ou connexion)
-  Future<void> setUserId(String userId) async {
+  /// Réinitialiser l'UUID anonyme (pour les tests)
+  Future<void> resetAnonymousId() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userIdKey, userId);
-    _userId = userId;
-    debugPrint('🆔 UUID défini: $userId');
+    await prefs.remove(_anonymousIdKey);
+    _cachedUserId = null;
+    debugPrint('🗑️ UUID anonyme supprimé');
   }
 }

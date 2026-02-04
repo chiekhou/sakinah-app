@@ -125,9 +125,65 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF1A1A2E),
         elevation: 0,
+        automaticallyImplyLeading: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: widget.onBackPressed ?? () => Navigator.pop(context),
+          icon: const Icon(Icons.delete_outline, color: Colors.white),
+          onPressed: () async {
+            final messenger = ScaffoldMessenger.of(context);
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                backgroundColor: const Color(0xFF2D2D44),
+                title: const Text(
+                  'Effacer l\'historique ?',
+                  style: TextStyle(color: Colors.white),
+                ),
+                content: const Text(
+                  'Toutes les conversations seront supprimées.',
+                  style: TextStyle(color: Colors.grey),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Annuler'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    child: const Text('Effacer'),
+                  ),
+                ],
+              ),
+            );
+
+            if (confirm == true && mounted) {
+              try {
+                final userId = await _userService.getUserId();
+                await _apiService.clearChatHistory(userId: userId);
+
+                if (mounted) {
+                  setState(() {
+                    _messages.clear();
+                  });
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('Historique effacé avec succès'),
+                      backgroundColor: AppTheme.successColor,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text('Erreur: $e'),
+                      backgroundColor: AppTheme.errorColor,
+                    ),
+                  );
+                }
+              }
+            }
+          },
         ),
         title: Row(
           children: [
@@ -167,87 +223,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ],
         ),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            color: const Color(0xFF2D2D44),
-            onSelected: (value) async {
-              if (value == 'clear') {
-                final messenger = ScaffoldMessenger.of(context);
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    backgroundColor: const Color(0xFF2D2D44),
-                    title: const Text(
-                      'Effacer l\'historique ?',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    content: const Text(
-                      'Toutes les conversations seront supprimées.',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Annuler'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.red,
-                        ),
-                        child: const Text('Effacer'),
-                      ),
-                    ],
-                  ),
-                );
-
-                if (confirm == true && mounted) {
-                  try {
-                    final userId = await _userService.getUserId();
-                    await _apiService.clearChatHistory(userId: userId);
-
-                    if (mounted) {
-                      setState(() {
-                        _messages.clear();
-                      });
-                      messenger.showSnackBar(
-                        const SnackBar(
-                          content: Text('Historique effacé avec succès'),
-                          backgroundColor: AppTheme.successColor,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text('Erreur: $e'),
-                          backgroundColor: AppTheme.errorColor,
-                        ),
-                      );
-                    }
-                  }
-                }
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'clear',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_outline, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text(
-                      'Effacer l\'historique',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
       body: Column(
         children: [

@@ -103,16 +103,6 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
         children: [
           Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: widget.onBackPressed ?? () => Navigator.pop(context),
-              ),
-              const Spacer(),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -134,7 +124,7 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
                       'Articles',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 28,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -177,7 +167,7 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
-        label: Text(label),
+        label: Text(label, textAlign: TextAlign.center),
         selected: isSelected,
         onSelected: (selected) {
           _filterByTheme(selected ? theme : null);
@@ -197,19 +187,21 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
   String _getThemeLabel(String theme) {
     switch (theme) {
       case 'stress':
-        return '😰 Stress';
+        return 'Stress 😰';
       case 'estime':
-        return '💪 Estime de soi';
+        return 'Estime de soi 💪';
       case 'harcelement':
-        return '🛡️ Harcèlement';
+        return 'Harcèlement 🛡️';
+      case 'famille':
+        return 'Famille 🏠';
       case 'emotions':
-        return '💭 Émotions';
+        return 'Émotions 💭';
       case 'sommeil':
-        return '😴 Sommeil';
+        return 'Sommeil 😴';
       case 'sante_mentale':
-        return '🧠 Santé mentale';
+        return 'Santé Mentale 🧠';
       case 'conflit':
-        return '🤝 Conflit';
+        return 'Conflit 🤝';
       default:
         return theme;
     }
@@ -521,6 +513,15 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
       case 'harcelement':
         return const LinearGradient(
           colors: [Color(0xFFE74C3C), Color(0xFFC0392B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'famille':
+        return const LinearGradient(
+          colors: [
+            Color.fromARGB(255, 161, 219, 52),
+            Color.fromARGB(255, 161, 219, 52),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );

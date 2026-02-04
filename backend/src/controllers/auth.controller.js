@@ -104,6 +104,16 @@ class AuthController {
         return res.status(400).json({ error: "Rôle invalide" });
       }
 
+      // Déterminer si l'utilisateur est mineur
+      const isMinorUser = is_minor || ["6-12", "13-17"].includes(age_range);
+
+      // Vérifier que l'email parent est fourni pour les mineurs
+      if (isMinorUser && !parent_email) {
+        return res.status(400).json({
+          error: "L'email du parent est requis pour les utilisateurs mineurs",
+        });
+      }
+
       // Générer un token de vérification email
       const email_verification_token = crypto.randomBytes(32).toString("hex");
       const email_verification_expires = new Date(
@@ -113,12 +123,17 @@ class AuthController {
       // Générer un pseudo anonyme
       const pseudo = await generateUniquePseudo();
 
-      // Déterminer le statut initial selon le rôle
+      // Déterminer le statut initial selon le rôle et l'âge
       let status = "PENDING";
       let verification_status = "PENDING";
 
-      if (role === "USER") {
-        status = "PENDING"; // En attente de vérification email
+      if (isMinorUser) {
+        // Les mineurs doivent avoir le consentement parental
+        status = "PENDING_PARENTAL_CONSENT";
+        verification_status = null;
+      } else if (role === "USER") {
+        // Les utilisateurs majeurs doivent juste vérifier leur email
+        status = "PENDING";
         verification_status = null;
       } else {
         // Les professionnels doivent être validés par un admin
@@ -138,21 +153,62 @@ class AuthController {
         pseudo,
         professional_title: role !== "USER" ? professional_title : null,
         verification_status: role !== "USER" ? verification_status : null,
-        is_minor: is_minor || false,
+        is_minor: isMinorUser,
         email_verification_token,
         email_verification_expires,
         is_email_verified: false,
       });
 
-      // TODO: Gérer le consentement parental si is_minor = true
-      if (is_minor && parent_email) {
-        // Logique pour envoyer un email au parent
-        console.log(
-          `TODO: Envoyer email consentement parental à ${parent_email}`
-        );
+      // Gérer le consentement parental si mineur
+      if (isMinorUser && parent_email) {
+        try {
+          const ParentalConsent = require("../models/ParentalConsent");
+          const {
+            getParentalConsentEmail,
+          } = require("../utils/email-templates/parental-consent-email");
+          const { sendEmail } = require("../services/email.service");
+
+          // Créer le consentement parental
+          const consent = await ParentalConsent.createConsent(
+            user.id,
+            parent_email
+          );
+
+          // Générer le lien de confirmation
+          const confirmationLink = `${
+            process.env.FRONTEND_URL || "http://localhost:3001"
+          }/confirm-parental-consent/${consent.consent_token}`;
+
+          // Préparer l'email pour le parent
+          const emailData = {
+            parentEmail: parent_email,
+            childUsername: user.username,
+            childEmail: user.email,
+            ageRange: user.age_range,
+            confirmationLink: confirmationLink,
+          };
+
+          const { subject, html } = getParentalConsentEmail(emailData);
+
+          // Envoyer l'email au parent
+          await sendEmail(parent_email, subject, html);
+
+          // Marquer comme envoyé
+          consent.notification_sent = true;
+          consent.notification_sent_date = new Date();
+          await consent.save();
+
+          console.log(
+            `✅ Email de consentement parental envoyé à ${parent_email}`
+          );
+        } catch (parentalError) {
+          console.error("❌ Erreur consentement parental:", parentalError);
+          // On continue l'inscription même si l'email échoue
+        }
       }
 
-      // Envoyer l'email de vérification
+      // Envoyer l'email de vérification à l'utilisateur
+      // (même pour les mineurs, pour qu'ils vérifient leur email)
       try {
         await sendVerificationEmail(email, email_verification_token);
       } catch (emailError) {
@@ -160,11 +216,21 @@ class AuthController {
         // On continue même si l'email échoue
       }
 
+      // Préparer le message de réponse
+      let message;
+      if (isMinorUser) {
+        message =
+          "Inscription réussie ! Un email a été envoyé à ton parent/tuteur pour obtenir son consentement. Tu pourras te connecter une fois que le consentement sera confirmé.";
+      } else if (role === "USER") {
+        message =
+          "Inscription réussie ! Vérifie ton email pour activer ton compte.";
+      } else {
+        message =
+          "Inscription réussie ! Vérifie ton email pour activer ton compte et ton compte sera activé après vérification de tes diplômes.";
+      }
+
       res.status(201).json({
-        message:
-          role === "USER"
-            ? "Inscription réussie ! Vérifie ton email pour activer ton compte."
-            : "Inscription réussie ! Ton compte sera activé après vérification de tes diplômes.",
+        message: message,
         user: {
           id: user.id,
           username: user.username,
@@ -172,8 +238,11 @@ class AuthController {
           pseudo: user.pseudo,
           role: user.role,
           status: user.status,
+          is_minor: user.is_minor,
           requires_email_verification: true,
+          requires_parental_consent: isMinorUser,
           requires_admin_approval: role !== "USER",
+          parent_email_sent: isMinorUser ? true : false,
         },
       });
     } catch (error) {

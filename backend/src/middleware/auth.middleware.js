@@ -117,9 +117,15 @@ const optionalAuth = async (req, res, next) => {
 // Compatibilité avec l'ancien code
 const authenticateToken = authenticate;
 
+/**
+ * Middleware spécifique pour les admins
+ */
+const requireAdmin = requireRole(["ADMIN"]);
+
 module.exports = {
   authenticate,
   authenticateToken, // Alias pour compatibilité
   requireRole,
+  requireAdmin,
   optionalAuth,
 };

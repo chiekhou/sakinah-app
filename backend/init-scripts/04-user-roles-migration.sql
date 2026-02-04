@@ -16,8 +16,8 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_expires TIMESTAMP;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_password_token VARCHAR(255);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_password_expires TIMESTAMP;
 
-ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'PENDING'
-    CHECK (status IN ('PENDING', 'ACTIVE', 'SUSPENDED', 'REJECTED'));
+ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(30) NOT NULL DEFAULT 'PENDING'
+    CHECK (status IN ('PENDING', 'ACTIVE', 'SUSPENDED', 'REJECTED', 'PENDING_PARENTAL_CONSENT'));
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS pseudo VARCHAR(50) UNIQUE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500);
@@ -108,10 +108,11 @@ CREATE TABLE IF NOT EXISTS testimonial_comments (
     content TEXT NOT NULL,
     
     -- Modération
-    status VARCHAR(20) NOT NULL DEFAULT 'APPROVED'
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING'
         CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
     moderated_by UUID REFERENCES users(id),
     moderated_at TIMESTAMP,
+    moderation_note TEXT,
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -330,4 +331,4 @@ INSERT INTO users (
 SELECT '✅ Migration terminée avec succès !' AS message;
 SELECT 'Nouveaux rôles : USER, EDUCATEUR, PSYCHOLOGUE, INTERVENANT, ADMIN' AS roles;
 SELECT 'Nouvelles tables : testimonials, reports, chat_rooms, room_messages, parental_consents' AS tables;
-SELECT '🔐 Compte admin créé : admin@sakinah.app / Admin123!' AS admin_account;
+SELECT '🔐 Compte admin créé : admin@sakinah.app / Admin123! ' AS admin_account;

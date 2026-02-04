@@ -159,55 +159,6 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
                       const SizedBox(height: 32),
                     ],
 
-                    // Info durée
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppTheme.primaryColor.withValues(alpha: 0.3),
-                          width: 2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.access_time_rounded,
-                              color: AppTheme.primaryColor,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Durée estimée',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppTheme.textSecondary,
-                                ),
-                              ),
-                              Text(
-                                'Environ ${_scenario!.durationMinutes} minutes',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
                     const SizedBox(height: 24),
 
                     // Conseils
@@ -606,12 +557,22 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
 
   String get themeEmoji {
     switch (_scenario!.theme) {
-      case 'harcelement':
-        return '🛡️';
       case 'stress':
         return '😰';
+      case 'estime':
+        return '💪';
+      case 'harcelement':
+        return '🛡️';
+      case 'emotions':
+        return '💭';
+      case 'famille':
+        return '🏠';
+      case 'sommeil':
+        return '😴';
       case 'conflit':
         return '🤝';
+      case 'sante_mentale':
+        return '🧠 ';
       default:
         return '🎭';
     }

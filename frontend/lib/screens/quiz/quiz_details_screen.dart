@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/models/quiz_model.dart';
+import 'package:sakinah_app/providers/auth_provider.dart';
 import 'package:sakinah_app/screens/quiz/quiz_result_screen.dart';
 import 'package:sakinah_app/services/api_service.dart';
+import 'package:sakinah_app/services/user_service.dart';
 
 class QuizDetailScreen extends StatefulWidget {
   final String quizId;
@@ -79,9 +82,18 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     }
 
     try {
+      // Récupérer le token si l'utilisateur est connecté
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final token = authProvider.token;
+
+      // Récupérer l'user_id (connecté ou anonyme)
+      final userId = await UserService().getUserId();
+
       final result = await _apiService.submitQuiz(
         quizId: widget.quizId,
         answers: _answers,
+        userId: userId,
+        token: token,
       );
 
       if (mounted) {
@@ -205,13 +217,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                       '${_quiz!.questions.length} questions',
                       AppTheme.primaryColor,
                     ),
-                    const SizedBox(height: 12),
-                    _buildInfoCard(
-                      Icons.access_time_rounded,
-                      'Durée',
-                      'Environ ${_quiz!.durationMinutes} minutes',
-                      AppTheme.secondaryColor,
-                    ),
+
                     const SizedBox(height: 12),
                     _buildInfoCard(
                       Icons.star_rounded,
@@ -460,6 +466,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
               children: [
                 if (_currentQuestionIndex > 0)
                   Expanded(
+                    flex: 2,
                     child: OutlinedButton(
                       onPressed: _previousQuestion,
                       child: const Text('Précédent'),

@@ -79,6 +79,11 @@ dependencies:
   # Markdown
   flutter_markdown: ^0.6.18
 
+  # Image picker
+  image_picker: ^1.0.7
+
+  # URL launcher for email and links
+  url_launcher: ^6.2.5
 
 dev_dependencies:
   flutter_test:

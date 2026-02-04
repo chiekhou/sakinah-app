@@ -112,3 +112,7 @@ out/
 *.apk
 *.aab
 *.ipa
+
+#Mark
+
+MIGRATIONS.md
