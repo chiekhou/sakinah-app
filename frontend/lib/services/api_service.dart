@@ -8,8 +8,10 @@ class ApiService {
   // URL de base de l'API
 
   //static const String baseUrl = 'http://localhost:3000/api' //IOS;
-  static const String baseUrl = 'http://10.0.2.2:3000/api';
-  static const String serverUrl = 'http://localhost:3000';
+  //static const String baseUrl = 'http://10.0.2.2:3000/api';
+
+  static const String baseUrl = 'https://sakinah-app.onrender.com/api';
+  static const String serverUrl = 'https://sakinah-app.onrender.com/api';
 
   // Clés pour le stockage local
   static const String _tokenKey = 'auth_token';

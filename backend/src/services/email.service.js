@@ -77,31 +77,30 @@ async function sendVerificationEmail(email, token) {
 
   // TODO: Implémenter l'envoi réel d'email
   // Exemple avec nodemailer:
-  /*
-  const nodemailer = require('nodemailer');
-  
+
+  const nodemailer = require("nodemailer");
+
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
     secure: true,
     auth: {
       user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
+      pass: process.env.SMTP_PASS,
+    },
   });
 
   await transporter.sendMail({
     from: '"Sakinah" <noreply@sakinah.app>',
     to: email,
-    subject: 'Vérifie ton email - Sakinah',
+    subject: "Vérifie ton email - Sakinah",
     html: `
       <h2>Bienvenue sur Sakinah ! 🌟</h2>
       <p>Pour activer ton compte, clique sur le bouton ci-dessous :</p>
       <a href="${verificationUrl}" style="...">Vérifier mon email</a>
       <p>Ce lien est valable pendant 24 heures.</p>
-    `
+    `,
   });
-  */
 
   return true;
 }
