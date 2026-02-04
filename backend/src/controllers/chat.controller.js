@@ -1,5 +1,5 @@
 const Conversation = require("../models/Conversation");
-const chatAIService = require("../services/chatAI.service");
+const chatAIService = require("../services/Chatai.service");
 
 class ChatController {
   /**
@@ -37,7 +37,7 @@ class ChatController {
       const aiResult = await chatAIService.generateResponse(
         message,
         recentHistory,
-        mood_context
+        mood_context,
       );
 
       // Ajouter le message utilisateur
