@@ -26,7 +26,6 @@ class QuizController {
       let quizzes = await Quiz.findAll({
         where,
         order: [["created_at", "DESC"]],
-        attributes: { exclude: ["questions"] }, // Ne pas renvoyer les questions dans la liste
       });
 
       // Filtrer par mood si spécifié
@@ -101,6 +100,10 @@ class QuizController {
         return res.status(400).json({ error: "Les réponses sont requises" });
       }
 
+      // Valider user_id : null si anonyme ou invalide
+      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const validUserId = user_id && isValidUUID.test(user_id) ? user_id : null;
+
       const quiz = await Quiz.findByPk(id);
 
       if (!quiz) {
@@ -133,7 +136,7 @@ class QuizController {
 
       // Sauvegarder le résultat
       const quizResult = await QuizResult.create({
-        user_id: user_id || null,
+        user_id: validUserId,
         quiz_id: id,
         score,
         answers,

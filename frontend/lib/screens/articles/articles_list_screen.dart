@@ -5,7 +5,8 @@ import 'package:sakinah_app/screens/articles/articles_details_screen.dart';
 import 'package:sakinah_app/services/api_service.dart';
 
 class ArticleListScreen extends StatefulWidget {
-  const ArticleListScreen({super.key});
+  final VoidCallback? onBackPressed;
+  const ArticleListScreen({super.key, this.onBackPressed});
 
   @override
   State<ArticleListScreen> createState() => _ArticleListScreenState();
@@ -91,45 +92,50 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
         gradient: AppTheme.primaryGradient,
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.3),
+            color: AppTheme.primaryColor.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.article_rounded,
-              color: Colors.white,
-              size: 32,
-            ),
-          ),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Articles',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                Text(
-                  'Apprends et découvre',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
+                child: const Icon(
+                  Icons.article_rounded,
+                  color: Colors.white,
+                  size: 32,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Articles',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Apprends et découvre',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -161,7 +167,7 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
-        label: Text(label),
+        label: Text(label, textAlign: TextAlign.center),
         selected: isSelected,
         onSelected: (selected) {
           _filterByTheme(selected ? theme : null);
@@ -181,17 +187,21 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
   String _getThemeLabel(String theme) {
     switch (theme) {
       case 'stress':
-        return '😰 Stress';
+        return 'Stress 😰';
       case 'estime':
-        return '💪 Estime de soi';
+        return 'Estime de soi 💪';
       case 'harcelement':
-        return '🛡️ Harcèlement';
+        return 'Harcèlement 🛡️';
+      case 'famille':
+        return 'Famille 🏠';
       case 'emotions':
-        return '💭 Émotions';
+        return 'Émotions 💭';
       case 'sommeil':
-        return '😴 Sommeil';
+        return 'Sommeil 😴';
+      case 'sante_mentale':
+        return 'Santé Mentale 🧠';
       case 'conflit':
-        return '🤝 Conflit';
+        return 'Conflit 🤝';
       default:
         return theme;
     }
@@ -287,7 +297,7 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryColor.withOpacity(0.3),
+              color: AppTheme.primaryColor.withValues(alpha: 0.3),
               blurRadius: 15,
               offset: const Offset(0, 5),
             ),
@@ -305,7 +315,7 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Row(
@@ -360,14 +370,14 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
                         Icon(
                           Icons.access_time_rounded,
                           size: 16,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '${article.readingTimeMinutes} min de lecture',
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
                       ],
@@ -398,7 +408,7 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: AppTheme.primaryColor.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -503,6 +513,15 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
       case 'harcelement':
         return const LinearGradient(
           colors: [Color(0xFFE74C3C), Color(0xFFC0392B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'famille':
+        return const LinearGradient(
+          colors: [
+            Color.fromARGB(255, 161, 219, 52),
+            Color.fromARGB(255, 161, 219, 52),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );

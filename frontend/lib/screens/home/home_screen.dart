@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/services/api_service.dart';
 import 'package:sakinah_app/widgets/content_card.dart';
+import 'package:sakinah_app/screens/articles/articles_details_screen.dart';
+import 'package:sakinah_app/screens/quiz/quiz_details_screen.dart';
+import 'package:sakinah_app/screens/scenarios/scenario_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final int? mood;
@@ -170,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.3),
+            color: AppTheme.primaryColor.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -184,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -269,83 +272,89 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildArticlesList(List articles) {
-    return SizedBox(
-      height: 180,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: articles.length,
-        itemBuilder: (context, index) {
-          final article = articles[index];
-          return Padding(
-            padding: EdgeInsets.only(
-              right: index < articles.length - 1 ? 12 : 0,
-            ),
+    return Column(
+      children: articles.map((article) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: SizedBox(
+            height: 180,
             child: ContentCard(
               title: article['title'],
               subtitle: '${article['reading_time_minutes']} min',
               type: 'article',
               theme: article['theme'],
               onTap: () {
-                // TODO: Navigation vers article detail
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ArticleDetailScreen(
+                      articleId: article['_id'] ?? article['id'],
+                    ),
+                  ),
+                );
               },
             ),
-          );
-        },
-      ),
+          ),
+        );
+      }).toList(),
     );
   }
 
   Widget _buildQuizzesList(List quizzes) {
-    return SizedBox(
-      height: 180,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: quizzes.length,
-        itemBuilder: (context, index) {
-          final quiz = quizzes[index];
-          return Padding(
-            padding: EdgeInsets.only(
-              right: index < quizzes.length - 1 ? 12 : 0,
-            ),
+    return Column(
+      children: quizzes.map((quiz) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: SizedBox(
+            height: 180,
             child: ContentCard(
               title: quiz['title'],
               subtitle: '${quiz['duration_minutes']} min',
               type: 'quiz',
               theme: quiz['theme'],
               onTap: () {
-                // TODO: Navigation vers quiz detail
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => QuizDetailScreen(
+                      quizId: quiz['_id'] ?? quiz['id'],
+                    ),
+                  ),
+                );
               },
             ),
-          );
-        },
-      ),
+          ),
+        );
+      }).toList(),
     );
   }
 
   Widget _buildScenariosList(List scenarios) {
-    return SizedBox(
-      height: 180,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: scenarios.length,
-        itemBuilder: (context, index) {
-          final scenario = scenarios[index];
-          return Padding(
-            padding: EdgeInsets.only(
-              right: index < scenarios.length - 1 ? 12 : 0,
-            ),
+    return Column(
+      children: scenarios.map((scenario) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: SizedBox(
+            height: 180,
             child: ContentCard(
               title: scenario['title'],
               subtitle: '${scenario['duration_minutes']} min',
               type: 'scenario',
               theme: scenario['theme'],
               onTap: () {
-                // TODO: Navigation vers scenario detail
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ScenarioDetailScreen(
+                      scenarioId: scenario['_id'] ?? scenario['id'],
+                    ),
+                  ),
+                );
               },
             ),
-          );
-        },
-      ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

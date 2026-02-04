@@ -17,7 +17,7 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
   ScenarioDetail? _scenario;
   bool _isLoading = true;
   String _currentStepKey = 'start';
-  List<String> _stepHistory = [];
+  final List<String> _stepHistory = [];
   bool _hasStarted = false;
 
   @override
@@ -99,7 +99,7 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
                 gradient: _getThemeGradient(_scenario!.theme),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryColor.withOpacity(0.3),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -107,10 +107,18 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
               ),
               child: Column(
                 children: [
+                  // Bouton retour
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: Text(
@@ -151,65 +159,16 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
                       const SizedBox(height: 32),
                     ],
 
-                    // Info durée
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppTheme.primaryColor.withOpacity(0.3),
-                          width: 2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.access_time_rounded,
-                              color: AppTheme.primaryColor,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Durée estimée',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppTheme.textSecondary,
-                                ),
-                              ),
-                              Text(
-                                'Environ ${_scenario!.durationMinutes} minutes',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
                     const SizedBox(height: 24),
 
                     // Conseils
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppTheme.successColor.withOpacity(0.1),
+                        color: AppTheme.successColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: AppTheme.successColor.withOpacity(0.3),
+                          color: AppTheme.successColor.withValues(alpha: 0.3),
                           width: 2,
                         ),
                       ),
@@ -344,7 +303,7 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryColor.withOpacity(0.3),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
@@ -358,7 +317,7 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
@@ -498,9 +457,9 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3), width: 2),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -543,12 +502,12 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppTheme.primaryColor.withOpacity(0.3),
+            color: AppTheme.primaryColor.withValues(alpha: 0.3),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -560,7 +519,7 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
+                color: AppTheme.primaryColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -598,12 +557,22 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
 
   String get themeEmoji {
     switch (_scenario!.theme) {
-      case 'harcelement':
-        return '🛡️';
       case 'stress':
         return '😰';
+      case 'estime':
+        return '💪';
+      case 'harcelement':
+        return '🛡️';
+      case 'emotions':
+        return '💭';
+      case 'famille':
+        return '🏠';
+      case 'sommeil':
+        return '😴';
       case 'conflit':
         return '🤝';
+      case 'sante_mentale':
+        return '🧠 ';
       default:
         return '🎭';
     }

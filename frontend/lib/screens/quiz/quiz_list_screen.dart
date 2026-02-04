@@ -5,7 +5,8 @@ import 'package:sakinah_app/screens/quiz/quiz_details_screen.dart';
 import 'package:sakinah_app/services/api_service.dart';
 
 class QuizListScreen extends StatefulWidget {
-  const QuizListScreen({super.key});
+  final VoidCallback? onBackPressed;
+  const QuizListScreen({super.key, this.onBackPressed});
 
   @override
   State<QuizListScreen> createState() => _QuizListScreenState();
@@ -92,7 +93,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
         gradient: AppTheme.primaryGradient,
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.3),
+            color: AppTheme.primaryColor.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -106,7 +107,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -124,7 +125,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
                       'Quiz',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 28,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -165,7 +166,12 @@ class _QuizListScreenState extends State<QuizListScreen> {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
-        label: Text(label),
+        label: Text(
+          label,
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.visible,
+          softWrap: false,
+        ),
         selected: isSelected,
         onSelected: (selected) {
           _filterByTheme(selected ? theme : null);
@@ -176,7 +182,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
           color: isSelected ? Colors.white : AppTheme.textPrimary,
           fontWeight: FontWeight.w600,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         showCheckmark: false,
       ),
     );
@@ -185,15 +191,21 @@ class _QuizListScreenState extends State<QuizListScreen> {
   String _getThemeLabel(String theme) {
     switch (theme) {
       case 'stress':
-        return '😰 Stress';
+        return 'Stress 😰';
       case 'estime':
-        return '💪 Estime de soi';
+        return 'Estime de soi 💪';
       case 'harcelement':
-        return '🛡️ Harcèlement';
+        return 'Harcèlement 🛡️';
+      case 'famille':
+        return 'Famille 🏠';
       case 'emotions':
-        return '💭 Émotions';
+        return 'Émotions 💭';
       case 'sommeil':
-        return '😴 Sommeil';
+        return 'Sommeil 😴';
+      case 'sante_mentale':
+        return 'Santé Mentale 🧠';
+      case 'conflit':
+        return 'Conflit 🤝';
       default:
         return theme;
     }
@@ -248,7 +260,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: AppTheme.primaryColor.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -289,12 +301,6 @@ class _QuizListScreenState extends State<QuizListScreen> {
                           quiz.difficultyEmoji,
                           quiz.difficulty,
                           AppTheme.accentColor,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildBadge(
-                          '⏱️',
-                          '${quiz.durationMinutes} min',
-                          AppTheme.secondaryColor,
                         ),
                       ],
                     ),
@@ -363,7 +369,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -401,6 +407,27 @@ class _QuizListScreenState extends State<QuizListScreen> {
       case 'harcelement':
         return const LinearGradient(
           colors: [Color(0xFFE74C3C), Color(0xFFC0392B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'famille':
+        return const LinearGradient(
+          colors: [
+            Color.fromARGB(255, 161, 219, 52),
+            Color.fromARGB(255, 161, 219, 52),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'emotions':
+        return const LinearGradient(
+          colors: [Color(0xFF3498DB), Color(0xFF2980B9)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'sommeil':
+        return const LinearGradient(
+          colors: [Color(0xFF8E44AD), Color(0xFF9B59B6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );

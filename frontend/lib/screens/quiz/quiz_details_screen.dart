@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/models/quiz_model.dart';
+import 'package:sakinah_app/providers/auth_provider.dart';
 import 'package:sakinah_app/screens/quiz/quiz_result_screen.dart';
 import 'package:sakinah_app/services/api_service.dart';
+import 'package:sakinah_app/services/user_service.dart';
 
 class QuizDetailScreen extends StatefulWidget {
   final String quizId;
@@ -18,7 +21,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
   QuizDetail? _quiz;
   bool _isLoading = true;
   int _currentQuestionIndex = 0;
-  Map<int, int> _answers = {};
+  final Map<int, int> _answers = {};
   bool _hasStarted = false;
 
   @override
@@ -79,9 +82,18 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     }
 
     try {
+      // Récupérer le token si l'utilisateur est connecté
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final token = authProvider.token;
+
+      // Récupérer l'user_id (connecté ou anonyme)
+      final userId = await UserService().getUserId();
+
       final result = await _apiService.submitQuiz(
         quizId: widget.quizId,
         answers: _answers,
+        userId: userId,
+        token: token,
       );
 
       if (mounted) {
@@ -138,7 +150,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                 gradient: AppTheme.primaryGradient,
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryColor.withOpacity(0.3),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -146,10 +158,18 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
               ),
               child: Column(
                 children: [
+                  // Bouton retour
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -197,13 +217,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                       '${_quiz!.questions.length} questions',
                       AppTheme.primaryColor,
                     ),
-                    const SizedBox(height: 12),
-                    _buildInfoCard(
-                      Icons.access_time_rounded,
-                      'Durée',
-                      'Environ ${_quiz!.durationMinutes} minutes',
-                      AppTheme.secondaryColor,
-                    ),
+
                     const SizedBox(height: 12),
                     _buildInfoCard(
                       Icons.star_rounded,
@@ -218,10 +232,10 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppTheme.infoColor.withOpacity(0.1),
+                        color: AppTheme.infoColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: AppTheme.infoColor.withOpacity(0.3),
+                          color: AppTheme.infoColor.withValues(alpha: 0.3),
                           width: 2,
                         ),
                       ),
@@ -303,14 +317,14 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 2),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: color),
@@ -399,7 +413,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.primaryColor.withOpacity(0.3),
+                          color: AppTheme.primaryColor.withValues(alpha: 0.3),
                           blurRadius: 15,
                           offset: const Offset(0, 5),
                         ),
@@ -442,7 +456,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 ),
@@ -452,6 +466,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
               children: [
                 if (_currentQuestionIndex > 0)
                   Expanded(
+                    flex: 2,
                     child: OutlinedButton(
                       onPressed: _previousQuestion,
                       child: const Text('Précédent'),
@@ -491,7 +506,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
           boxShadow: [
             if (isSelected)
               BoxShadow(
-                color: AppTheme.primaryColor.withOpacity(0.3),
+                color: AppTheme.primaryColor.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),

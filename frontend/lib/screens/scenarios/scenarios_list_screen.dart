@@ -5,7 +5,8 @@ import 'package:sakinah_app/screens/scenarios/scenario_details_screen.dart';
 import 'package:sakinah_app/services/api_service.dart';
 
 class ScenarioListScreen extends StatefulWidget {
-  const ScenarioListScreen({super.key});
+  final VoidCallback? onBackPressed;
+  const ScenarioListScreen({super.key, this.onBackPressed});
 
   @override
   State<ScenarioListScreen> createState() => _ScenarioListScreenState();
@@ -91,45 +92,50 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
         gradient: AppTheme.primaryGradient,
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.3),
+            color: AppTheme.primaryColor.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.theater_comedy_rounded,
-              color: Colors.white,
-              size: 32,
-            ),
-          ),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Mises en situation',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                Text(
-                  'Pratique et apprends',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
+                child: const Icon(
+                  Icons.theater_comedy_rounded,
+                  color: Colors.white,
+                  size: 32,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Mises en situation',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Pratique et apprends',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -159,7 +165,7 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
-        label: Text(label),
+        label: Text(label, textAlign: TextAlign.center),
         selected: isSelected,
         onSelected: (selected) {
           _filterByTheme(selected ? theme : null);
@@ -178,14 +184,22 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
 
   String _getThemeLabel(String theme) {
     switch (theme) {
-      case 'harcelement':
-        return '🛡️ Harcèlement';
       case 'stress':
-        return '😰 Stress';
-      case 'conflit':
-        return '🤝 Conflit';
+        return 'Stress 😰';
+      case 'estime':
+        return 'Estime de soi 💪';
+      case 'harcelement':
+        return 'Harcèlement 🛡️';
+      case 'famille':
+        return 'Famille 🏠';
       case 'emotions':
-        return '💭 Émotions';
+        return 'Émotions 💭';
+      case 'sommeil':
+        return 'Sommeil 😴';
+      case 'sante_mentale':
+        return 'Santé Mentale 🧠';
+      case 'conflit':
+        return 'Conflit 🤝';
       default:
         return theme;
     }
@@ -246,7 +260,7 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: AppTheme.primaryColor.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -257,7 +271,7 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
           children: [
             // En-tête avec gradient
             Container(
-              height: 100, // Réduit de 120 à 100
+              height: 100,
               decoration: BoxDecoration(
                 gradient: _getThemeGradient(scenario.theme),
                 borderRadius: const BorderRadius.only(
@@ -270,40 +284,7 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
                   Center(
                     child: Text(
                       scenario.themeEmoji,
-                      style: const TextStyle(fontSize: 48), // Réduit de 52 à 48
-                    ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.access_time_rounded,
-                            size: 12,
-                            color: AppTheme.textPrimary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${scenario.durationMinutes}m',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
+                      style: const TextStyle(fontSize: 48),
                     ),
                   ),
                 ],
@@ -369,21 +350,42 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
 
   LinearGradient _getThemeGradient(String theme) {
     switch (theme) {
-      case 'harcelement':
-        return const LinearGradient(
-          colors: [Color(0xFFE74C3C), Color(0xFFC0392B)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
       case 'stress':
         return const LinearGradient(
           colors: [Color(0xFFFFB75E), Color(0xFFED8F03)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
-      case 'conflit':
+      case 'estime':
+        return const LinearGradient(
+          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'harcelement':
+        return const LinearGradient(
+          colors: [Color(0xFFE74C3C), Color(0xFFC0392B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'famille':
+        return const LinearGradient(
+          colors: [
+            Color.fromARGB(255, 161, 219, 52),
+            Color.fromARGB(255, 161, 219, 52),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'emotions':
         return const LinearGradient(
           colors: [Color(0xFF3498DB), Color(0xFF2980B9)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'sommeil':
+        return const LinearGradient(
+          colors: [Color(0xFF8E44AD), Color(0xFF9B59B6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );

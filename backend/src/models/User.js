@@ -39,6 +39,119 @@ const User = sequelize.define(
       allowNull: false,
       defaultValue: "13-17",
     },
+
+    // ========== SYSTÈME DE RÔLES ==========
+    role: {
+      type: DataTypes.ENUM(
+        "USER",
+        "EDUCATEUR",
+        "PSYCHOLOGUE",
+        "INTERVENANT",
+        "ADMIN"
+      ),
+      allowNull: false,
+      defaultValue: "USER",
+    },
+    status: {
+      type: DataTypes.ENUM("PENDING", "ACTIVE", "SUSPENDED", "REJECTED"),
+      allowNull: false,
+      defaultValue: "PENDING",
+    },
+
+    // ========== VÉRIFICATION EMAIL ==========
+    is_email_verified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    email_verification_token: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    email_verification_expires: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
+    // ========== RESET PASSWORD ==========
+    reset_password_token: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    reset_password_expires: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
+    // ========== PROFIL UTILISATEUR ==========
+    pseudo: {
+      type: DataTypes.STRING(50),
+      unique: true,
+      allowNull: true,
+    },
+    avatar_url: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
+    bio: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+
+    // ========== MINEUR + CONSENTEMENT PARENTAL ==========
+    is_minor: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    parent_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: "users",
+        key: "id",
+      },
+    },
+
+    // ========== PROFESSIONNELS ==========
+    professional_title: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    diploma_url: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
+    verification_status: {
+      type: DataTypes.ENUM("PENDING", "VERIFIED", "REJECTED"),
+      allowNull: true,
+    },
+    verified_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    verified_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: "users",
+        key: "id",
+      },
+    },
+
+    // ========== STATISTIQUES ==========
+    last_login: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    last_active: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    login_count: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+
+    // ========== PRÉFÉRENCES ==========
     accessibility_settings: {
       type: DataTypes.JSONB,
       defaultValue: {
@@ -48,9 +161,14 @@ const User = sequelize.define(
         simplified_language: false,
       },
     },
-    last_login: {
-      type: DataTypes.DATE,
-      allowNull: true,
+    notification_preferences: {
+      type: DataTypes.JSONB,
+      defaultValue: {
+        email_notifications: true,
+        push_notifications: true,
+        new_message: true,
+        new_testimonial: true,
+      },
     },
   },
   {
@@ -70,16 +188,56 @@ User.beforeCreate(async (user) => {
   }
 });
 
+// Hook pour hasher le mot de passe avant la mise à jour
+User.beforeUpdate(async (user) => {
+  if (user.changed("password_hash")) {
+    const salt = await bcrypt.genSalt(10);
+    user.password_hash = await bcrypt.hash(user.password_hash, salt);
+  }
+});
+
 // Méthode pour vérifier le mot de passe
 User.prototype.validatePassword = async function (password) {
   return await bcrypt.compare(password, this.password_hash);
 };
 
-// Méthode pour obtenir le JSON sécurisé (sans le mot de passe)
+// Méthode pour obtenir le JSON sécurisé (sans données sensibles)
 User.prototype.toSafeJSON = function () {
   const values = { ...this.get() };
   delete values.password_hash;
+  delete values.email_verification_token;
+  delete values.reset_password_token;
   return values;
+};
+
+// Méthode pour obtenir un JSON public (pour affichage aux autres utilisateurs)
+User.prototype.toPublicJSON = function () {
+  return {
+    id: this.id,
+    pseudo: this.pseudo,
+    avatar_url: this.avatar_url,
+    bio: this.bio,
+    role: this.role,
+    professional_title: this.professional_title,
+    verification_status: this.verification_status,
+  };
+};
+
+// Méthode pour vérifier si l'utilisateur est un professionnel
+User.prototype.isProfessional = function () {
+  return ["EDUCATEUR", "PSYCHOLOGUE", "INTERVENANT", "ADMIN"].includes(
+    this.role
+  );
+};
+
+// Méthode pour vérifier si l'utilisateur est admin
+User.prototype.isAdmin = function () {
+  return this.role === "ADMIN";
+};
+
+// Méthode pour vérifier si le compte est actif
+User.prototype.isActive = function () {
+  return this.status === "ACTIVE" && this.is_email_verified;
 };
 
 module.exports = User;

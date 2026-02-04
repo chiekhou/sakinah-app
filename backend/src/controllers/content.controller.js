@@ -206,10 +206,23 @@ class ContentController {
         order: [["created_at", "DESC"]],
       });
 
-      // Filtrer par mood
+      // Fonction pour déterminer les moods compatibles
+      const getCompatibleMoods = (mood) => {
+        if (mood <= 2) return [1, 2, 3]; // Très mal / Mal
+        if (mood === 3) return [2, 3, 4]; // Pas terrible
+        if (mood === 4) return [3, 4, 5]; // Correct
+        if (mood === 5) return [4, 5, 6]; // Bien
+        if (mood === 6) return [5, 6, 7]; // Très bien
+        if (mood === 7) return [5, 6, 7]; // Excellent
+        return [mood];
+      };
+
+      const compatibleMoods = getCompatibleMoods(moodNum);
+
+      // Filtrer par mood avec compatibilité
       articles = articles.filter((a) => {
         if (!a.mood_tags || a.mood_tags.length === 0) return true;
-        return a.mood_tags.includes(moodNum);
+        return a.mood_tags.some((tag) => compatibleMoods.includes(tag));
       });
 
       // Récupérer des quiz
@@ -222,7 +235,7 @@ class ContentController {
 
       quizzes = quizzes.filter((q) => {
         if (!q.mood_tags || q.mood_tags.length === 0) return true;
-        return q.mood_tags.includes(moodNum);
+        return q.mood_tags.some((tag) => compatibleMoods.includes(tag));
       });
 
       // Récupérer des scénarios
@@ -235,20 +248,30 @@ class ContentController {
 
       scenarios = scenarios.filter((s) => {
         if (!s.mood_tags || s.mood_tags.length === 0) return true;
-        return s.mood_tags.includes(moodNum);
+        return s.mood_tags.some((tag) => compatibleMoods.includes(tag));
       });
 
       // Construire la réponse avec des recommandations personnalisées
       let message = "";
-      if (moodNum <= 3) {
+      if (moodNum <= 2) {
         message =
           "Prends soin de toi. Voici des contenus qui peuvent t'aider à te sentir mieux. 💙";
-      } else if (moodNum <= 5) {
+      } else if (moodNum === 3) {
+        message =
+          "Chaque jour est une nouvelle chance. Voici des contenus pour t'aider à aller mieux. 🌸";
+      } else if (moodNum === 4) {
         message =
           "Continue comme ça ! Voici des contenus pour aller encore mieux. 🌟";
-      } else {
+      } else if (moodNum === 5) {
         message =
-          "Tu te sens bien ! Voici des contenus pour maintenir ton bien-être. 😊";
+          "Tu te sens bien ! Voici des contenus pour renforcer ton bien-être. 😊";
+      } else if (moodNum === 6) {
+        message =
+          "C'est génial ! Voici des contenus pour maintenir cette belle énergie. ✨";
+      } else {
+        // mood === 7
+        message =
+          "Tu es au top ! Voici des contenus pour cultiver cette excellente humeur. 🌟💚";
       }
 
       res.json({

@@ -106,7 +106,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: AppTheme.primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -171,7 +171,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -259,10 +259,14 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
         return '🛡️';
       case 'emotions':
         return '💭';
+      case 'famille':
+        return '🏠';
       case 'sommeil':
         return '😴';
       case 'conflit':
         return '🤝';
+      case 'sante_mentale':
+        return '🧠 ';
       default:
         return '📰';
     }
@@ -282,6 +286,10 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
         return 'Sommeil';
       case 'conflit':
         return 'Conflit';
+      case 'famille':
+        return 'Famille';
+      case 'sante_mentale':
+        return 'Santé Mentale';
       default:
         return theme;
     }
@@ -304,6 +312,15 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
       case 'harcelement':
         return const LinearGradient(
           colors: [Color(0xFFE74C3C), Color(0xFFC0392B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'famille':
+        return const LinearGradient(
+          colors: [
+            Color.fromARGB(255, 161, 219, 52),
+            Color.fromARGB(255, 161, 219, 52),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
