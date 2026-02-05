@@ -1,7 +1,8 @@
 // Service d'envoi d'emails
 // TODO: Configurer un vrai service d'email (SendGrid, Mailgun, etc.)
 
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+const FRONTEND_URL =
+  process.env.FRONTEND_URL || "https://sakinah-app.onrender.com";
 
 /**
  * Méthode générique pour envoyer un email
@@ -24,12 +25,12 @@ async function sendEmail(to, subject, html) {
   const nodemailer = require("nodemailer");
 
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: true,
+    host: process.env.EMAIL_HOST,
+    port: parseInt(process.env.EMAIL_PORT),
+    secure: process.env.EMAIL_SECURE,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
     },
   });
 
