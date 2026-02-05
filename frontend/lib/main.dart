@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:sakinah_app/screens/auth/email_verification_screen.dart';
 import 'package:sakinah_app/screens/auth/forgot_password_screen.dart';
@@ -20,10 +21,16 @@ import 'package:sakinah_app/screens/users/edit_profile_screen.dart';
 import 'package:sakinah_app/screens/users/history_screen.dart';
 import 'package:sakinah_app/screens/users/about_screen.dart';
 import 'package:sakinah_app/screens/users/support_screen.dart';
+import 'package:sakinah_app/services/deep_link_service.dart';
 
-void main() {
+void main() async {
   // Configuration de la barre de statut
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Charger les variables d'environnement
+  // Utiliser --dart-define=ENV=production pour la production
+  const String env = String.fromEnvironment('ENV', defaultValue: 'development');
+  await dotenv.load(fileName: '.env.$env');
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -41,8 +48,30 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final DeepLinkService _deepLinkService = DeepLinkService();
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialiser les deep links après le premier frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _deepLinkService.init();
+    });
+  }
+
+  @override
+  void dispose() {
+    _deepLinkService.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +84,8 @@ class MyApp extends StatelessWidget {
         title: 'Sakinah - Bien-être Mental',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
+        // Clé de navigation pour les deep links
+        navigatorKey: DeepLinkService.navigatorKey,
 
         // Routes
         initialRoute: '/',

@@ -84,6 +84,8 @@ dependencies:
 
   # URL launcher for email and links
   url_launcher: ^6.2.5
+  flutter_dotenv: ^6.0.0
+  app_links: ^6.4.1
 
 dev_dependencies:
   flutter_test:
@@ -95,6 +97,19 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+
+  # Générateur d'icônes de lancement
+  flutter_launcher_icons: ^0.14.3
+
+# Configuration des icônes de lancement
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  adaptive_icon_background: "#2ECC71"  # Couleur primaire verte de l'app
+  adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -112,6 +127,8 @@ flutter:
     - assets/images/
     - assets/animations/
     - assets/icons/
+    - .env.development
+    - .env.production
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

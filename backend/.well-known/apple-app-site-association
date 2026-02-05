@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAM_ID.com.sakinah.app",
+        "paths": [
+          "/verify-email/*",
+          "/reset-password/*",
+          "/parental-consent/*"
+        ]
+      }
+    ]
+  }
+}
