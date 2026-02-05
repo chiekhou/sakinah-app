@@ -5,6 +5,7 @@
 *.pem
 *.key
 docker-compose.yml
+**/init-scripts/
 
 # Node.js
 node_modules/
