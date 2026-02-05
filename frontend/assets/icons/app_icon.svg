@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Fond vert (couleur primaire de l'app) -->
+  <rect width="1024" height="1024" rx="200" fill="#2ECC71"/>
+
+  <!-- Coeur blanc centré -->
+  <path d="M512 820c-12 0-24-4-33-12L256 608C180 540 140 456 140 368c0-100 80-180 180-180 60 0 116 28 152 76l40 52 40-52c36-48 92-76 152-76 100 0 180 80 180 180 0 88-40 172-116 240L545 808c-9 8-21 12-33 12z"
+        fill="white"/>
+</svg>
