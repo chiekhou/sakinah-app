@@ -15,7 +15,7 @@ app.use(helmet());
 
 // CORS
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
-  "http://localhost:3000",
+  "https://sakinah-app.onrender.com",
 ];
 app.use(
   cors({
@@ -27,7 +27,7 @@ app.use(
       }
     },
     credentials: true,
-  })
+  }),
 );
 
 // Parser JSON
@@ -36,6 +36,16 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Servir les fichiers statiques (avatars, diplômes)
 app.use("/uploads", express.static("uploads"));
+
+// Deep Links - Fichiers de vérification pour Android et iOS
+app.use("/.well-known", express.static(".well-known", {
+  setHeaders: (res, path) => {
+    // apple-app-site-association doit être servi avec content-type application/json
+    if (path.endsWith("apple-app-site-association")) {
+      res.setHeader("Content-Type", "application/json");
+    }
+  }
+}));
 
 // Routes
 app.get("/", (req, res) => {

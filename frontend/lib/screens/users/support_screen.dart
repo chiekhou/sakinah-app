@@ -7,9 +7,8 @@ import 'package:url_launcher/url_launcher.dart';
 class SupportScreen extends StatelessWidget {
   const SupportScreen({super.key});
 
-  // URL de la page de don (à personnaliser)
-  static const String _donationUrl = 'https://ko-fi.com/sakinahapp';
-  // Alternative: 'https://www.buymeacoffee.com/sakinahapp'
+  // URL de la page PayPal.me pour les dons
+  static const String _donationUrl = 'https://paypal.me/stservices92';
 
   Future<void> _launchDonation(BuildContext context) async {
     final Uri uri = Uri.parse(_donationUrl);
@@ -40,14 +39,14 @@ class SupportScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Visite notre page pour nous soutenir :',
+              'Visite notre page PayPal pour nous soutenir :',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
             SelectableText(
               _donationUrl,
-              style: TextStyle(
-                color: AppTheme.primaryColor,
+              style: const TextStyle(
+                color: Color(0xFF0070BA), // Couleur PayPal
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -200,7 +199,7 @@ class SupportScreen extends StatelessWidget {
 
             const SizedBox(height: 32),
 
-            /* // Options de don - À ACTIVER PLUS TARD
+            // Section don PayPal
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -220,7 +219,7 @@ class SupportScreen extends StatelessWidget {
               child: Column(
                 children: [
                   const Text(
-                    'Soutenir à partir de',
+                    'Soutenez-nous même avec',
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.textSecondary,
@@ -254,7 +253,7 @@ class SupportScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'ou plus selon ton cœur',
+                    "La finalité c'est le geste pas la quantité 💚",
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.textSecondary,
@@ -262,14 +261,14 @@ class SupportScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Bouton principal de don
+                  // Bouton principal de don PayPal
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () => _launchDonation(context),
                       icon: const Icon(Icons.favorite, color: Colors.white),
                       label: const Text(
-                        'Faire un don',
+                        'Faire un don via PayPal',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -277,15 +276,17 @@ class SupportScreen extends StatelessWidget {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
+                        backgroundColor: const Color(
+                          0xFF0070BA,
+                        ), // Couleur PayPal
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 4,
-                        shadowColor: AppTheme.primaryColor.withValues(
-                          alpha: 0.4,
-                        ),
+                        shadowColor: const Color(
+                          0xFF0070BA,
+                        ).withValues(alpha: 0.4),
                       ),
                     ),
                   ),
@@ -294,7 +295,6 @@ class SupportScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 24),
-            */
 
             // Note de remerciement
             Container(

@@ -1,15 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:sakinah_app/config/api_config.dart';
 import 'package:sakinah_app/providers/mood_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Service pour gérer toutes les communications avec l'API backend
 class ApiService {
-  // URL de base de l'API
-
-  //static const String baseUrl = 'http://localhost:3000/api' //IOS;
-  static const String baseUrl = 'http://10.0.2.2:3000/api';
-  static const String serverUrl = 'http://localhost:3000';
+  // URL de base de l'API - chargée depuis ApiConfig (via .env)
+  static String get baseUrl => ApiConfig.baseUrl;
+  static String get serverUrl => ApiConfig.baseUrl;
 
   // Clés pour le stockage local
   static const String _tokenKey = 'auth_token';

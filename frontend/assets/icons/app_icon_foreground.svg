@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Fond transparent -->
+  <rect width="1024" height="1024" fill="transparent"/>
+
+  <!-- Coeur blanc centré (plus grand pour l'adaptive icon) -->
+  <path d="M512 780c-10 0-20-3-28-10L276 588C212 530 176 456 176 376c0-88 72-160 160-160 52 0 100 24 132 64l44 56 44-56c32-40 80-64 132-64 88 0 160 72 160 160 0 80-36 154-100 212L540 770c-8 7-18 10-28 10z"
+        fill="white"/>
+</svg>
