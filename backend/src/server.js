@@ -38,14 +38,17 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use("/uploads", express.static("uploads"));
 
 // Deep Links - Fichiers de vérification pour Android et iOS
-app.use("/.well-known", express.static(".well-known", {
-  setHeaders: (res, path) => {
-    // apple-app-site-association doit être servi avec content-type application/json
-    if (path.endsWith("apple-app-site-association")) {
-      res.setHeader("Content-Type", "application/json");
-    }
-  }
-}));
+app.use(
+  "/.well-known",
+  express.static(".well-known", {
+    setHeaders: (res, path) => {
+      // apple-app-site-association doit être servi avec content-type application/json
+      if (path.endsWith("apple-app-site-association")) {
+        res.setHeader("Content-Type", "application/json");
+      }
+    },
+  }),
+);
 
 // Routes
 app.get("/", (req, res) => {
@@ -112,7 +115,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`🚀 Serveur démarré sur le port ${PORT}`);
   console.log(`📍 Environnement: ${process.env.NODE_ENV || "development"}`);
-  console.log(`🌐 URL: http://localhost:${PORT}`);
+  console.log(`🌐 URL: ${process.env.FRONTEND_URL}`);
 });
 
 module.exports = app;
