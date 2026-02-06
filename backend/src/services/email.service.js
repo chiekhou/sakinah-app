@@ -4,8 +4,9 @@
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const FROM_EMAIL = process.env.SMTP_FROM_EMAIL || "noreply@sakinah.app";
 const FROM_NAME = process.env.SMTP_FROM_NAME || "Sakinah";
-const FRONTEND_URL =
-  process.env.FRONTEND_URL || "https://sakinah-app.onrender.com";
+
+// Deep link scheme pour l'app mobile
+const DEEP_LINK_SCHEME = "sakinah://";
 
 // Validation de la clé API
 if (!BREVO_API_KEY) {
@@ -77,7 +78,7 @@ async function sendEmail(to, subject, html) {
  * Envoyer un email de vérification
  */
 async function sendVerificationEmail(email, token) {
-  const verificationUrl = `${FRONTEND_URL}/verify-email/${token}`;
+  const verificationUrl = `${DEEP_LINK_SCHEME}verify-email/${token}`;
 
   console.log("==============================================");
   console.log("📧 EMAIL DE VÉRIFICATION");
@@ -109,7 +110,7 @@ async function sendVerificationEmail(email, token) {
  * Envoyer un email de réinitialisation de mot de passe
  */
 async function sendPasswordResetEmail(email, token) {
-  const resetUrl = `${FRONTEND_URL}/reset-password/${token}`;
+  const resetUrl = `${DEEP_LINK_SCHEME}reset-password/${token}`;
 
   console.log("==============================================");
   console.log("🔑 EMAIL DE RÉINITIALISATION DE MOT DE PASSE");
@@ -142,7 +143,7 @@ async function sendPasswordResetEmail(email, token) {
  * Envoyer un email de consentement parental
  */
 async function sendParentalConsentEmail(parentEmail, childName, consentToken) {
-  const consentUrl = `${FRONTEND_URL}/parental-consent/${consentToken}`;
+  const consentUrl = `${DEEP_LINK_SCHEME}parental-consent/${consentToken}`;
 
   console.log("==============================================");
   console.log("👨‍👩‍👧 EMAIL DE CONSENTEMENT PARENTAL");
