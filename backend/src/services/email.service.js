@@ -1,79 +1,69 @@
-// Service d'envoi d'emails avec Brevo (ex-Sendinblue)
-const nodemailer = require("nodemailer");
+// Service d'envoi d'emails avec Brevo API (ex-Sendinblue)
+// Utilise l'API HTTP au lieu de SMTP pour contourner les blocages des hébergeurs cloud
 
-// Configuration centralisée
-const SMTP_CONFIG = {
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT) || 587,
-  secure: process.env.SMTP_SECURE === "true",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-};
-
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const FROM_EMAIL = process.env.SMTP_FROM_EMAIL || "noreply@sakinah.app";
 const FROM_NAME = process.env.SMTP_FROM_NAME || "Sakinah";
 const FRONTEND_URL =
   process.env.FRONTEND_URL || "https://sakinah-app.onrender.com";
 
-// Validation des variables d'environnement
-const requiredEnvVars = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS"];
-const missingVars = requiredEnvVars.filter((v) => !process.env[v]);
-
-if (missingVars.length > 0) {
+// Validation de la clé API
+if (!BREVO_API_KEY) {
   if (process.env.NODE_ENV === "production") {
-    console.error(
-      `❌ Variables SMTP manquantes en production: ${missingVars.join(", ")}`,
-    );
+    console.error("❌ BREVO_API_KEY manquante en production!");
   } else {
-    console.warn(
-      `⚠️ Variables SMTP manquantes: ${missingVars.join(", ")} - Les emails ne seront pas envoyés`,
-    );
+    console.warn("⚠️ BREVO_API_KEY manquante - Les emails ne seront pas envoyés");
   }
-}
-
-// Transporter réutilisable (singleton)
-let transporter = null;
-
-function getTransporter() {
-  if (!transporter && !missingVars.length) {
-    transporter = nodemailer.createTransport(SMTP_CONFIG);
-  }
-  return transporter;
 }
 
 /**
- * Méthode générique pour envoyer un email
+ * Envoyer un email via l'API Brevo
  * @param {string} to - Email destinataire
  * @param {string} subject - Sujet de l'email
  * @param {string} html - Contenu HTML de l'email
  */
 async function sendEmail(to, subject, html) {
   console.log("==============================================");
-  console.log("📧 ENVOI D'EMAIL");
+  console.log("📧 ENVOI D'EMAIL (API Brevo)");
   console.log("==============================================");
   console.log(`À: ${to}`);
   console.log(`Sujet: ${subject}`);
   console.log("==============================================");
 
-  const transport = getTransporter();
-
-  if (!transport) {
-    console.warn("⚠️ SMTP non configuré - Email non envoyé");
+  if (!BREVO_API_KEY) {
+    console.warn("⚠️ BREVO_API_KEY non configurée - Email non envoyé");
     console.log("Contenu HTML:", html.substring(0, 200) + "...");
     console.log("==============================================\n");
     return false;
   }
 
   try {
-    await transport.sendMail({
-      from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
-      to: to,
-      subject: subject,
-      html: html,
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "api-key": BREVO_API_KEY,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: {
+          name: FROM_NAME,
+          email: FROM_EMAIL,
+        },
+        to: [{ email: to }],
+        subject: subject,
+        htmlContent: html,
+      }),
     });
-    console.log("✅ Email envoyé avec succès");
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Erreur API Brevo:", errorData);
+      throw new Error(errorData.message || `HTTP ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("✅ Email envoyé avec succès - ID:", result.messageId);
     console.log("==============================================\n");
     return true;
   } catch (error) {
