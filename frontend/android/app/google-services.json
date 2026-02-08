@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "454468497506",
+    "project_id": "sakinah-app-96330",
+    "storage_bucket": "sakinah-app-96330.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:454468497506:android:85037dbf4f18c66d5ea13b",
+        "android_client_info": {
+          "package_name": "com.example.sakinah_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArtNzZuZcoR6q9X-HP4U50EB3m7FAP2lg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

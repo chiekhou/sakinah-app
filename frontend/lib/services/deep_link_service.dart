@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:sakinah_app/services/api_service.dart';
+import 'package:sakinah_app/screens/auth/reset_password_screen.dart';
 
 /// Service pour gérer les deep links (vérification email, reset password, etc.)
 class DeepLinkService {
@@ -102,7 +103,7 @@ class DeepLinkService {
 
       case 'reset-password':
         if (token != null && token.isNotEmpty) {
-          _navigateToResetPassword(token);
+          await _navigateToResetPassword(token);
         } else {
           debugPrint('🔗 Token manquant pour reset-password');
           _showMessage('Lien de réinitialisation invalide', isSuccess: false);
@@ -151,9 +152,31 @@ class DeepLinkService {
   }
 
   /// Naviguer vers la page de reset password avec le token
-  void _navigateToResetPassword(String token) {
+  Future<void> _navigateToResetPassword(String token) async {
     debugPrint('🔗 Navigation reset password avec token: $token');
-    _showMessage('Fonctionnalité reset password en cours...', isSuccess: true);
+
+    // Attendre que le navigator soit prêt (cold start)
+    NavigatorState? navigator = navigatorKey.currentState;
+    int attempts = 0;
+    while (navigator == null && attempts < 50) {
+      debugPrint('🔗 Navigator pas encore prêt, attente... (tentative ${attempts + 1})');
+      await Future.delayed(const Duration(milliseconds: 100));
+      navigator = navigatorKey.currentState;
+      attempts++;
+    }
+
+    if (navigator != null) {
+      debugPrint('🔗 Navigator prêt, navigation vers ResetPasswordScreen');
+      navigator.pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => ResetPasswordScreen(token: token),
+        ),
+        (route) => false,
+      );
+    } else {
+      debugPrint('🔗 ⚠️ Navigator toujours null après $attempts tentatives');
+      _showMessage('Erreur de navigation', isSuccess: false);
+    }
   }
 
   /// Gérer le consentement parental

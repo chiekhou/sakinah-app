@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sakinah_app/services/api_service.dart';
 import 'package:sakinah_app/services/user_service.dart';
+import 'package:sakinah_app/services/push_notification_service.dart';
 
 class AuthProvider with ChangeNotifier {
   String? _token;
@@ -111,6 +112,9 @@ class AuthProvider with ChangeNotifier {
 
   /// Déconnexion
   Future<void> logout() async {
+    // Désinscrire le token FCM avant la déconnexion
+    await PushNotificationService.unregisterToken();
+
     _token = null;
     _currentUser = null;
     _isAuthenticated = false;

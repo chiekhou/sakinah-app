@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/models/article_model.dart';
 import 'package:sakinah_app/services/api_service.dart';
@@ -179,11 +180,30 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
       ),
       child: MarkdownBody(
         data: _article!.content,
+        onTapLink: (text, href, title) async {
+          if (href != null) {
+            final uri = Uri.parse(href);
+            if (await canLaunchUrl(uri)) {
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            } else {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Impossible d\'ouvrir ce lien')),
+                );
+              }
+            }
+          }
+        },
         styleSheet: MarkdownStyleSheet(
           p: TextStyle(
             fontSize: _fontSize,
             color: AppTheme.textPrimary,
             height: 1.6,
+          ),
+          a: const TextStyle(
+            color: AppTheme.primaryColor,
+            decoration: TextDecoration.underline,
+            decorationColor: AppTheme.primaryColor,
           ),
           h1: TextStyle(
             fontSize: _fontSize + 8,

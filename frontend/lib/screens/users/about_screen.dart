@@ -9,7 +9,7 @@ class AboutScreen extends StatelessWidget {
   Future<void> _launchEmail(BuildContext context) async {
     final Uri emailUri = Uri(
       scheme: 'mailto',
-      path: 'chiekhou.traore@gmail.com',
+      path: 'st.services92@gmail.com',
       query: 'subject=Feedback Sakinah App',
     );
 
@@ -43,7 +43,7 @@ class AboutScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             SelectableText(
-              'chiekhou.traore@gmail.com',
+              'st.services92@gmail.com',
               style: TextStyle(
                 color: AppTheme.primaryColor,
                 fontWeight: FontWeight.bold,
@@ -52,10 +52,7 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'Objet : Feedback Sakinah App',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppTheme.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
             ),
           ],
         ),

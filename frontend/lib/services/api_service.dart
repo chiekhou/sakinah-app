@@ -728,4 +728,44 @@ class ApiService {
       throw Exception('Erreur lors de la récupération des ressources');
     }
   }
+
+  // ==================== NOTIFICATIONS PUSH (FCM) ====================
+
+  /// Enregistrer un token FCM pour les notifications push
+  static Future<Map<String, dynamic>> registerFCMToken({
+    required String fcmToken,
+    String? deviceType,
+  }) async {
+    final token = await getToken();
+    if (token == null) {
+      return {'success': false, 'message': 'Non authentifié'};
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/notifications/fcm-token'),
+      headers: _getHeaders(token: token),
+      body: jsonEncode({
+        'fcm_token': fcmToken,
+        'device_type': deviceType,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erreur lors de l\'enregistrement du token FCM');
+    }
+  }
+
+  /// Désactiver un token FCM (logout)
+  static Future<void> unregisterFCMToken({required String fcmToken}) async {
+    final token = await getToken();
+    if (token == null) return;
+
+    await http.delete(
+      Uri.parse('$baseUrl/notifications/fcm-token'),
+      headers: _getHeaders(token: token),
+      body: jsonEncode({'fcm_token': fcmToken}),
+    );
+  }
 }

@@ -37,6 +37,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _parentalConsentGiven = false;
   bool _showParentalConsent = false;
 
+  // Acceptation des conditions
+  bool _termsAccepted = false;
+
   final List<Map<String, dynamic>> _roles = [
     {
       'value': 'USER',
@@ -53,7 +56,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       'icon': Icons.psychology,
       'color': AppTheme.info,
       'disabled': true,
-      'disabledMessage': 'Le rôle Psychologue sera disponible prochainement selon l\'évolution du projet. Restez connecté !',
+      'disabledMessage':
+          'Le rôle Psychologue sera disponible prochainement selon l\'évolution du projet. Restez connecté !',
     },
     {
       'value': 'EDUCATEUR',
@@ -62,7 +66,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       'icon': Icons.school,
       'color': AppTheme.moodCalm,
       'disabled': true,
-      'disabledMessage': 'Le rôle Éducateur sera disponible prochainement selon l\'évolution du projet. Restez connecté !',
+      'disabledMessage':
+          'Le rôle Éducateur sera disponible prochainement selon l\'évolution du projet. Restez connecté !',
     },
     {
       'value': 'INTERVENANT',
@@ -71,7 +76,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       'icon': Icons.work,
       'color': AppTheme.warning,
       'disabled': true,
-      'disabledMessage': 'Le rôle Intervenant sera disponible prochainement selon l\'évolution du projet. Restez connecté !',
+      'disabledMessage':
+          'Le rôle Intervenant sera disponible prochainement selon l\'évolution du projet. Restez connecté !',
     },
   ];
 
@@ -99,6 +105,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Vérifier l'acceptation des conditions
+    if (!_termsAccepted) {
+      setState(() {
+        _errorMessage =
+            'Tu dois accepter les conditions d\'utilisation et la politique de confidentialité';
+      });
       return;
     }
 
@@ -226,7 +241,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 CustomTextField(
                   controller: _usernameController,
                   labelText: 'Nom d\'utilisateur',
-                  hintText: 'john_doe',
+                  hintText: 'Pseudo',
                   prefixIcon: Icons.person_outline,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -456,7 +471,102 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
+
+                // Acceptation des conditions
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _termsAccepted
+                        ? AppTheme.primary.withValues(alpha: 0.05)
+                        : Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _termsAccepted
+                          ? AppTheme.primary.withValues(alpha: 0.3)
+                          : Colors.grey.shade200,
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Checkbox(
+                          value: _termsAccepted,
+                          onChanged: (value) {
+                            setState(() {
+                              _termsAccepted = value ?? false;
+                            });
+                          },
+                          activeColor: AppTheme.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'J\'accepte les conditions',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Wrap(
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.pushNamed(
+                                        context, '/terms-of-service');
+                                  },
+                                  child: Text(
+                                    'Conditions d\'utilisation',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: AppTheme.primary,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  ' et ',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.pushNamed(
+                                        context, '/privacy-policy');
+                                  },
+                                  child: Text(
+                                    'Politique de confidentialité',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: AppTheme.primary,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
 
                 // Bouton d'inscription
                 PrimaryButton(
@@ -496,16 +606,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(
-              Icons.schedule,
-              color: AppTheme.warning,
-              size: 28,
-            ),
+            Icon(Icons.schedule, color: AppTheme.warning, size: 28),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -547,7 +651,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              role['disabledMessage'] ?? 'Ce rôle sera disponible prochainement.',
+              role['disabledMessage'] ??
+                  'Ce rôle sera disponible prochainement.',
               style: TextStyle(
                 fontSize: 14,
                 color: AppTheme.textSecondary,
@@ -599,17 +704,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
               decoration: BoxDecoration(
                 color: isDisabled
                     ? Colors.grey.shade100
-                    : (isSelected ? role['color'].withOpacity(0.1) : Colors.white),
+                    : (isSelected
+                          ? role['color'].withOpacity(0.1)
+                          : Colors.white),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isDisabled
                       ? Colors.grey.shade300
                       : (isSelected
-                          ? role['color']
-                          : AppTheme.textDisabled.withOpacity(0.3)),
+                            ? role['color']
+                            : AppTheme.textDisabled.withOpacity(0.3)),
                   width: 2,
                 ),
-                boxShadow: isSelected && !isDisabled ? AppTheme.cardShadow : null,
+                boxShadow: isSelected && !isDisabled
+                    ? AppTheme.cardShadow
+                    : null,
               ),
               child: Row(
                 children: [
@@ -643,8 +752,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 color: isDisabled
                                     ? Colors.grey
                                     : (isSelected
-                                        ? role['color']
-                                        : AppTheme.textPrimary),
+                                          ? role['color']
+                                          : AppTheme.textPrimary),
                               ),
                             ),
                             if (isDisabled) ...[
@@ -686,7 +795,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   if (isSelected && !isDisabled)
                     Icon(Icons.check_circle, color: role['color'], size: 24),
                   if (isDisabled)
-                    Icon(Icons.lock_outline, color: Colors.grey.shade400, size: 20),
+                    Icon(
+                      Icons.lock_outline,
+                      color: Colors.grey.shade400,
+                      size: 20,
+                    ),
                 ],
               ),
             ),

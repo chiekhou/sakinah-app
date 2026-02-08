@@ -152,6 +152,28 @@ class ProfileScreen extends StatelessWidget {
               },
             ),
 
+            // Politique de confidentialité
+            _buildMenuCard(
+              context,
+              icon: Icons.privacy_tip_outlined,
+              title: 'Confidentialité',
+              subtitle: 'Politique de protection des données',
+              onTap: () {
+                Navigator.pushNamed(context, '/privacy-policy');
+              },
+            ),
+
+            // Conditions d'utilisation
+            _buildMenuCard(
+              context,
+              icon: Icons.description_outlined,
+              title: 'Conditions d\'utilisation',
+              subtitle: 'Règles d\'utilisation de l\'app',
+              onTap: () {
+                Navigator.pushNamed(context, '/terms-of-service');
+              },
+            ),
+
             // Bouton Soutenir le projet
             _buildMenuCard(
               context,
@@ -349,6 +371,43 @@ class ProfileScreen extends StatelessWidget {
                   label: const Text('Soutenir'),
                   style: TextButton.styleFrom(
                     foregroundColor: AppTheme.primaryColor,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+
+            // Liens légaux
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/privacy-policy');
+                  },
+                  child: Text(
+                    'Confidentialité',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ),
+                Text(
+                  '•',
+                  style: TextStyle(color: AppTheme.textSecondary),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/terms-of-service');
+                  },
+                  child: Text(
+                    'Conditions',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                 ),
               ],

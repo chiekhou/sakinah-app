@@ -44,4 +44,18 @@ router.put("/:id/read", notificationController.markAsRead);
  */
 router.delete("/:id", notificationController.deleteNotification);
 
+/**
+ * @route   POST /api/notifications/fcm-token
+ * @desc    Enregistrer un token FCM pour les notifications push
+ * @access  Private
+ */
+router.post("/fcm-token", notificationController.registerFCMToken);
+
+/**
+ * @route   DELETE /api/notifications/fcm-token
+ * @desc    Désactiver un token FCM (logout)
+ * @access  Private
+ */
+router.delete("/fcm-token", notificationController.unregisterFCMToken);
+
 module.exports = router;

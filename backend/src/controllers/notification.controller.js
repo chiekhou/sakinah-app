@@ -1,4 +1,5 @@
 const Notification = require("../models/Notification");
+const FCMToken = require("../models/FCMToken");
 
 /**
  * Controller pour gérer les notifications
@@ -146,6 +147,57 @@ class NotificationController {
       res
         .status(500)
         .json({ error: "Erreur lors de la suppression de la notification" });
+    }
+  }
+
+  /**
+   * Enregistrer un token FCM
+   * POST /api/notifications/fcm-token
+   */
+  async registerFCMToken(req, res) {
+    try {
+      const userId = req.user.id;
+      const { fcm_token, device_type } = req.body;
+
+      if (!fcm_token) {
+        return res.status(400).json({ error: "Token FCM requis" });
+      }
+
+      await FCMToken.registerToken(userId, fcm_token, device_type);
+
+      res.json({
+        message: "Token FCM enregistré avec succès",
+      });
+    } catch (error) {
+      console.error("Erreur registerFCMToken:", error);
+      res
+        .status(500)
+        .json({ error: "Erreur lors de l'enregistrement du token" });
+    }
+  }
+
+  /**
+   * Désactiver un token FCM (logout)
+   * DELETE /api/notifications/fcm-token
+   */
+  async unregisterFCMToken(req, res) {
+    try {
+      const { fcm_token } = req.body;
+
+      if (!fcm_token) {
+        return res.status(400).json({ error: "Token FCM requis" });
+      }
+
+      await FCMToken.deactivateToken(fcm_token);
+
+      res.json({
+        message: "Token FCM désactivé avec succès",
+      });
+    } catch (error) {
+      console.error("Erreur unregisterFCMToken:", error);
+      res
+        .status(500)
+        .json({ error: "Erreur lors de la désactivation du token" });
     }
   }
 }

@@ -21,7 +21,10 @@ import 'package:sakinah_app/screens/users/edit_profile_screen.dart';
 import 'package:sakinah_app/screens/users/history_screen.dart';
 import 'package:sakinah_app/screens/users/about_screen.dart';
 import 'package:sakinah_app/screens/users/support_screen.dart';
+import 'package:sakinah_app/screens/legal/privacy_policy_screen.dart';
+import 'package:sakinah_app/screens/legal/terms_of_service_screen.dart';
 import 'package:sakinah_app/services/deep_link_service.dart';
+import 'package:sakinah_app/services/push_notification_service.dart';
 
 void main() async {
   // Configuration de la barre de statut
@@ -31,6 +34,9 @@ void main() async {
   // Utiliser --dart-define=ENV=production pour la production
   const String env = String.fromEnvironment('ENV', defaultValue: 'development');
   await dotenv.load(fileName: '.env.$env');
+
+  // Initialiser les notifications push (Firebase)
+  await PushNotificationService.initialize();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -103,6 +109,8 @@ class _MyAppState extends State<MyApp> {
           '/history': (context) => const HistoryScreen(),
           '/about': (context) => const AboutScreen(),
           '/support': (context) => const SupportScreen(),
+          '/privacy-policy': (context) => const PrivacyPolicyScreen(),
+          '/terms-of-service': (context) => const TermsOfServiceScreen(),
         },
 
         // Route avec arguments (email-verification)
