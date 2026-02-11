@@ -117,3 +117,7 @@ out/
 #Mark
 
 MIGRATIONS.md
+
+test-push.js
+test-firebase-init.js
+sakinah-app-96330-firebase-adminsdk-fbsvc-b513694077.json

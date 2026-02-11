@@ -248,12 +248,9 @@ class AdminController {
       await user.update({ status });
 
       // TODO: Envoyer un email à l'utilisateur pour l'informer
-      console.log(
-        `📧 Email à envoyer à ${user.email}: Statut changé à ${status}`
-      );
-      if (reason) {
-        console.log(`Raison: ${reason}`);
-      }
+      // PRODUCTION: Logs sensibles désactivés (exposent email utilisateur)
+      // console.log(`📧 Email à envoyer à ${user.email}: Statut changé à ${status}`);
+      // if (reason) { console.log(`Raison: ${reason}`); }
 
       res.json({
         message: `Statut de l'utilisateur changé à ${status}`,
@@ -289,13 +286,9 @@ class AdminController {
         return res.status(404).json({ error: "Utilisateur non trouvé" });
       }
 
-      // Log avant suppression
-      console.log(
-        `🗑️ Admin ${req.user.email} supprime l'utilisateur ${user.email}`
-      );
-      if (reason) {
-        console.log(`Raison: ${reason}`);
-      }
+      // PRODUCTION: Logs sensibles désactivés (exposent emails admin et utilisateur)
+      // console.log(`🗑️ Admin ${req.user.email} supprime l'utilisateur ${user.email}`);
+      // if (reason) { console.log(`Raison: ${reason}`); }
 
       await user.destroy();
 
@@ -332,18 +325,11 @@ class AdminController {
         ],
       });
 
-      console.log(
-        `📊 Debug: Total professionnels en base: ${allProfessionals.length}`
-      );
-      allProfessionals.forEach((p) => {
-        console.log(
-          `   - ${p.email}: role=${p.role}, status=${p.status}, verification=${
-            p.verification_status
-          }, diploma=${p.diploma_url ? "OUI" : "NON"}, email_verified=${
-            p.is_email_verified
-          }`
-        );
-      });
+      // PRODUCTION: Logs de debug désactivés (exposent emails professionnels)
+      // console.log(`📊 Debug: Total professionnels en base: ${allProfessionals.length}`);
+      // allProfessionals.forEach((p) => {
+      //   console.log(`   - ${p.email}: role=${p.role}, status=${p.status}, verification=${p.verification_status}, diploma=${p.diploma_url ? "OUI" : "NON"}, email_verified=${p.is_email_verified}`);
+      // });
 
       // Filtrer pour avoir seulement ceux en attente avec diplôme
       const professionals = allProfessionals.filter(
@@ -354,9 +340,8 @@ class AdminController {
           p.is_email_verified === true
       );
 
-      console.log(
-        `✅ Professionnels en attente avec diplôme: ${professionals.length}`
-      );
+      // PRODUCTION: Log de debug désactivé
+      // console.log(`✅ Professionnels en attente avec diplôme: ${professionals.length}`);
 
       res.json({
         professionals,
@@ -417,11 +402,10 @@ class AdminController {
       });
 
       // TODO: Envoyer un email au professionnel
-      console.log(`📧 Email à envoyer à ${professional.email}`);
-      console.log(`Décision: ${decision}`);
-      if (note) {
-        console.log(`Note: ${note}`);
-      }
+      // PRODUCTION: Logs sensibles désactivés (exposent email professionnel)
+      // console.log(`📧 Email à envoyer à ${professional.email}`);
+      // console.log(`Décision: ${decision}`);
+      // if (note) { console.log(`Note: ${note}`); }
 
       res.json({
         message:
@@ -495,7 +479,8 @@ class AdminController {
         status: "ACTIVE",
       });
 
-      console.log(`👑 ${user.email} a été promu ADMIN par ${req.user.email}`);
+      // PRODUCTION: Log sensible désactivé (expose emails)
+      // console.log(`👑 ${user.email} a été promu ADMIN par ${req.user.email}`);
 
       res.json({
         message: "Utilisateur promu en administrateur",

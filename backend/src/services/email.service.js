@@ -24,17 +24,19 @@ if (!BREVO_API_KEY) {
  * @param {string} html - Contenu HTML de l'email
  */
 async function sendEmail(to, subject, html) {
-  console.log("==============================================");
-  console.log("📧 ENVOI D'EMAIL (API Brevo)");
-  console.log("==============================================");
-  console.log(`À: ${to}`);
-  console.log(`Sujet: ${subject}`);
-  console.log("==============================================");
+  // PRODUCTION: Logs sensibles désactivés (exposent emails destinataires)
+  // console.log("==============================================");
+  // console.log("📧 ENVOI D'EMAIL (API Brevo)");
+  // console.log("==============================================");
+  // console.log(`À: ${to}`);
+  // console.log(`Sujet: ${subject}`);
+  // console.log("==============================================");
 
   if (!BREVO_API_KEY) {
     console.warn("⚠️ BREVO_API_KEY non configurée - Email non envoyé");
-    console.log("Contenu HTML:", html.substring(0, 200) + "...");
-    console.log("==============================================\n");
+    // PRODUCTION: Log sensible désactivé (expose contenu email)
+    // console.log("Contenu HTML:", html.substring(0, 200) + "...");
+    // console.log("==============================================\n");
     return false;
   }
 
@@ -64,12 +66,13 @@ async function sendEmail(to, subject, html) {
     }
 
     const result = await response.json();
-    console.log("✅ Email envoyé avec succès - ID:", result.messageId);
-    console.log("==============================================\n");
+    // PRODUCTION: Log simplifié (ne pas exposer d'ID)
+    // console.log("✅ Email envoyé avec succès - ID:", result.messageId);
+    // console.log("==============================================\n");
     return true;
   } catch (error) {
-    console.error("❌ Erreur envoi email:", error.message);
-    console.log("==============================================\n");
+    console.error("❌ Erreur envoi email"); // Message générique sans détails
+    // console.log("==============================================\n");
     throw error;
   }
 }
@@ -80,12 +83,13 @@ async function sendEmail(to, subject, html) {
 async function sendVerificationEmail(email, token) {
   const verificationUrl = `${DEEP_LINK_SCHEME}verify-email/${token}`;
 
-  console.log("==============================================");
-  console.log("📧 EMAIL DE VÉRIFICATION");
-  console.log("==============================================");
-  console.log(`À: ${email}`);
-  console.log(`Lien: ${verificationUrl}`);
-  console.log("==============================================");
+  // PRODUCTION: Logs sensibles désactivés (exposent email et token de vérification)
+  // console.log("==============================================");
+  // console.log("📧 EMAIL DE VÉRIFICATION");
+  // console.log("==============================================");
+  // console.log(`À: ${email}`);
+  // console.log(`Lien: ${verificationUrl}`);
+  // console.log("==============================================");
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -112,12 +116,13 @@ async function sendVerificationEmail(email, token) {
 async function sendPasswordResetEmail(email, token) {
   const resetUrl = `${DEEP_LINK_SCHEME}reset-password/${token}`;
 
-  console.log("==============================================");
-  console.log("🔑 EMAIL DE RÉINITIALISATION DE MOT DE PASSE");
-  console.log("==============================================");
-  console.log(`À: ${email}`);
-  console.log(`Lien: ${resetUrl}`);
-  console.log("==============================================");
+  // PRODUCTION: Logs sensibles désactivés (exposent email et token de reset)
+  // console.log("==============================================");
+  // console.log("🔑 EMAIL DE RÉINITIALISATION DE MOT DE PASSE");
+  // console.log("==============================================");
+  // console.log(`À: ${email}`);
+  // console.log(`Lien: ${resetUrl}`);
+  // console.log("==============================================");
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -145,12 +150,13 @@ async function sendPasswordResetEmail(email, token) {
 async function sendParentalConsentEmail(parentEmail, childName, consentToken) {
   const consentUrl = `${DEEP_LINK_SCHEME}parental-consent/${consentToken}`;
 
-  console.log("==============================================");
-  console.log("👨‍👩‍👧 EMAIL DE CONSENTEMENT PARENTAL");
-  console.log("==============================================");
-  console.log(`À: ${parentEmail}`);
-  console.log(`Lien: ${consentUrl}`);
-  console.log("==============================================");
+  // PRODUCTION: Logs sensibles désactivés (exposent email parent et token)
+  // console.log("==============================================");
+  // console.log("👨‍👩‍👧 EMAIL DE CONSENTEMENT PARENTAL");
+  // console.log("==============================================");
+  // console.log(`À: ${parentEmail}`);
+  // console.log(`Lien: ${consentUrl}`);
+  // console.log("==============================================");
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

@@ -104,7 +104,12 @@ app.use((req, res) => {
 
 // Gestion globale des erreurs
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  // PRODUCTION: Ne pas exposer les stack traces dans les logs
+  if (process.env.NODE_ENV === "development") {
+    console.error(err.stack);
+  } else {
+    console.error("Erreur serveur:", err.message);
+  }
   res.status(err.status || 500).json({
     error: err.message || "Erreur serveur",
     ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
@@ -115,7 +120,8 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`🚀 Serveur démarré sur le port ${PORT}`);
   console.log(`📍 Environnement: ${process.env.NODE_ENV || "development"}`);
-  console.log(`🌐 URL: ${process.env.FRONTEND_URL}`);
+  // PRODUCTION: Ne pas exposer l'URL frontend dans les logs
+  // console.log(`🌐 URL: ${process.env.FRONTEND_URL}`);
 });
 
 module.exports = app;

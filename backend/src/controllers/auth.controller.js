@@ -198,9 +198,8 @@ class AuthController {
           consent.notification_sent_date = new Date();
           await consent.save();
 
-          console.log(
-            `✅ Email de consentement parental envoyé à ${parent_email}`
-          );
+          // PRODUCTION: Log sensible désactivé (expose email parent)
+          // console.log(`✅ Email de consentement parental envoyé à ${parent_email}`);
         } catch (parentalError) {
           console.error("❌ Erreur consentement parental:", parentalError);
           // On continue l'inscription même si l'email échoue
@@ -507,17 +506,19 @@ class AuthController {
       const reset_password_token = crypto.randomBytes(32).toString("hex");
       const reset_password_expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h au lieu de 1h pour debug
 
-      console.log("🔑 Génération token reset password");
-      console.log("Email:", email);
-      console.log("Token:", reset_password_token);
-      console.log("Expire à:", reset_password_expires);
+      // PRODUCTION: Logs sensibles désactivés
+      // console.log("🔑 Génération token reset password");
+      // console.log("Email:", email);
+      // console.log("Token:", reset_password_token);
+      // console.log("Expire à:", reset_password_expires);
 
       await user.update({
         reset_password_token,
         reset_password_expires,
       });
 
-      console.log("✅ Token sauvegardé en base de données");
+      // PRODUCTION: Log sensible désactivé
+      // console.log("✅ Token sauvegardé en base de données");
 
       await sendPasswordResetEmail(email, reset_password_token);
 
@@ -547,14 +548,16 @@ class AuthController {
       });
 
       if (!user) {
-        console.log("❌ Token introuvable dans la base de données");
+        // PRODUCTION: Log sensible désactivé
+        // console.log("❌ Token introuvable dans la base de données");
         return res.status(400).json({ error: "Token invalide" });
       }
 
-      console.log("✅ User trouvé:", user.email);
-      console.log("📅 Token expire à:", user.reset_password_expires);
-      console.log("🕐 Date actuelle:", new Date());
-      console.log("⏰ Token expiré?", new Date() > user.reset_password_expires);
+      // PRODUCTION: Logs sensibles désactivés (exposent email et tokens)
+      // console.log("✅ User trouvé:", user.email);
+      // console.log("📅 Token expire à:", user.reset_password_expires);
+      // console.log("🕐 Date actuelle:", new Date());
+      // console.log("⏰ Token expiré?", new Date() > user.reset_password_expires);
 
       if (new Date() > user.reset_password_expires) {
         return res.status(400).json({ error: "Le token a expiré" });
