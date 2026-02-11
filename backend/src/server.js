@@ -132,8 +132,14 @@ require("./models/FCMToken");
 
 // Synchronisation des tables PostgreSQL puis démarrage du serveur
 const sequelize = require("./config/database");
+const pushService = require("./services/push.service");
+
 sequelize.sync().then(() => {
   console.log("✅ Tables PostgreSQL synchronisées");
+
+  // Démarrer le cron job des rappels quotidiens
+  pushService.startDailyReminderCron();
+
   app.listen(PORT, () => {
     console.log(`🚀 Serveur démarré sur le port ${PORT}`);
     console.log(`📍 Environnement: ${process.env.NODE_ENV || "development"}`);

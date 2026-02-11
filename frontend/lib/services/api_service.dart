@@ -25,8 +25,11 @@ class ApiService {
         relativePath.startsWith('https://')) {
       return relativePath;
     }
-    // Sinon, construire l'URL complète
-    return '$serverUrl$relativePath';
+    // Utiliser l'URL du serveur sans le suffixe /api pour les fichiers statiques
+    final serverBase = serverUrl.endsWith('/api')
+        ? serverUrl.substring(0, serverUrl.length - 4)
+        : serverUrl;
+    return '$serverBase$relativePath';
   }
 
   // ==================== GESTION DU TOKEN ====================

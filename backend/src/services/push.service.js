@@ -1,6 +1,7 @@
 // Service d'envoi de notifications push via Firebase Cloud Messaging
 // Pattern similaire à email.service.js
 
+const cron = require("node-cron");
 const FCMToken = require("../models/FCMToken");
 
 // Firebase Admin SDK - chargé dynamiquement
@@ -29,9 +30,13 @@ function initializeFirebase() {
   if (!projectId || !clientEmail || !privateKey) {
     if (process.env.NODE_ENV === "production") {
       console.error("❌ Variables Firebase manquantes en production!");
-      console.error("   Requis: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY");
+      console.error(
+        "   Requis: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY",
+      );
     } else {
-      console.warn("⚠️ Firebase non configuré - Push notifications désactivées");
+      console.warn(
+        "⚠️ Firebase non configuré - Push notifications désactivées",
+      );
     }
     return false;
   }
@@ -64,13 +69,14 @@ initializeFirebase();
  * @param {object} data - Additional data payload
  */
 async function sendToUser(userId, notification, data = {}) {
+  /*
   console.log("==============================================");
   console.log("📱 ENVOI NOTIFICATION PUSH");
   console.log("==============================================");
   console.log(`User ID: ${userId}`);
   console.log(`Titre: ${notification.title}`);
   console.log(`Message: ${notification.body}`);
-  console.log("==============================================");
+  console.log("==============================================");*/
 
   if (!firebaseInitialized) {
     console.warn("⚠️ Firebase non initialisé - Notification non envoyée");
@@ -98,7 +104,7 @@ async function sendToUser(userId, notification, data = {}) {
       },
       data: {
         ...Object.fromEntries(
-          Object.entries(data).map(([k, v]) => [k, String(v)])
+          Object.entries(data).map(([k, v]) => [k, String(v)]),
         ),
         click_action: "FLUTTER_NOTIFICATION_CLICK",
       },
@@ -144,7 +150,7 @@ async function sendToUser(userId, notification, data = {}) {
  */
 async function sendToUsers(userIds, notification, data = {}) {
   const results = await Promise.all(
-    userIds.map((userId) => sendToUser(userId, notification, data))
+    userIds.map((userId) => sendToUser(userId, notification, data)),
   );
   return results;
 }
@@ -166,7 +172,7 @@ async function notifyTestimonialApproved(userId, testimonialId) {
     {
       type: "TESTIMONIAL_APPROVED",
       testimonial_id: testimonialId,
-    }
+    },
   );
 }
 
@@ -185,7 +191,7 @@ async function notifyTestimonialRejected(userId, testimonialId, reason) {
     {
       type: "TESTIMONIAL_REJECTED",
       testimonial_id: testimonialId,
-    }
+    },
   );
 }
 
@@ -202,14 +208,18 @@ async function notifyTestimonialLiked(userId, testimonialId, likerPseudo) {
     {
       type: "TESTIMONIAL_LIKED",
       testimonial_id: testimonialId,
-    }
+    },
   );
 }
 
 /**
  * Notification: Nouveau commentaire sur témoignage
  */
-async function notifyTestimonialCommented(userId, testimonialId, commenterPseudo) {
+async function notifyTestimonialCommented(
+  userId,
+  testimonialId,
+  commenterPseudo,
+) {
   return sendToUser(
     userId,
     {
@@ -219,7 +229,7 @@ async function notifyTestimonialCommented(userId, testimonialId, commenterPseudo
     {
       type: "TESTIMONIAL_COMMENTED",
       testimonial_id: testimonialId,
-    }
+    },
   );
 }
 
@@ -237,7 +247,7 @@ async function notifyCommentApproved(userId, commentId, testimonialId) {
       type: "COMMENT_APPROVED",
       comment_id: commentId,
       testimonial_id: testimonialId,
-    }
+    },
   );
 }
 
@@ -256,7 +266,7 @@ async function notifyCommentRejected(userId, commentId, reason) {
     {
       type: "COMMENT_REJECTED",
       comment_id: commentId,
-    }
+    },
   );
 }
 
@@ -294,7 +304,8 @@ async function sendDailyReminder() {
       "Ta santé mentale compte. Viens partager ou lire des témoignages inspirants. 💫",
     ];
 
-    const randomReminder = reminders[Math.floor(Math.random() * reminders.length)];
+    const randomReminder =
+      reminders[Math.floor(Math.random() * reminders.length)];
 
     let sent = 0;
     for (const user of users) {
@@ -304,7 +315,7 @@ async function sendDailyReminder() {
           title: "🌿 Rappel Sakinah",
           body: randomReminder,
         },
-        { type: "DAILY_REMINDER" }
+        { type: "DAILY_REMINDER" },
       );
       if (result.success) sent++;
     }
@@ -314,6 +325,21 @@ async function sendDailyReminder() {
   } catch (error) {
     console.error("❌ Erreur envoi rappels:", error.message);
   }
+}
+
+/**
+ * Démarrer le cron job pour les rappels quotidiens
+ * Planifié à 9h00 heure de Paris, tous les jours
+ */
+function startDailyReminderCron() {
+  cron.schedule("0 9 * * *", () => {
+    console.log(`[${new Date().toISOString()}] Cron: lancement rappel quotidien`);
+    sendDailyReminder();
+  }, {
+    timezone: "Europe/Paris",
+  });
+
+  console.log("✅ Cron job rappel quotidien planifié (tous les jours à 9h00 Paris)");
 }
 
 module.exports = {
@@ -326,4 +352,5 @@ module.exports = {
   notifyCommentApproved,
   notifyCommentRejected,
   sendDailyReminder,
+  startDailyReminderCron,
 };

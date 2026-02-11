@@ -2,6 +2,7 @@ const Testimonial = require("../models/Testimonial");
 const TestimonialComment = require("../models/TestimonialComment");
 const Notification = require("../models/Notification");
 const User = require("../models/User");
+const pushService = require("../services/push.service");
 
 /**
  * Controller Admin - Modération des Témoignages et Commentaires
@@ -87,15 +88,17 @@ class AdminModerationController {
         moderation_note
       );
 
-      // Envoyer notification à l'auteur
+      // Envoyer notification en base + push Firebase
       if (status === "APPROVED") {
         await Notification.testimonialApproved(testimonial.user_id, id);
+        await pushService.notifyTestimonialApproved(testimonial.user_id, id);
       } else if (status === "REJECTED") {
         await Notification.testimonialRejected(
           testimonial.user_id,
           id,
           moderation_note
         );
+        await pushService.notifyTestimonialRejected(testimonial.user_id, id, moderation_note);
       }
 
       res.json({
@@ -209,13 +212,14 @@ class AdminModerationController {
         moderation_note
       );
 
-      // Envoyer notification à l'auteur du commentaire
+      // Envoyer notification en base + push Firebase
       if (status === "APPROVED") {
         await Notification.commentApproved(
           comment.user_id,
           id,
           comment.testimonial_id
         );
+        await pushService.notifyCommentApproved(comment.user_id, id, comment.testimonial_id);
 
         // Notifier l'auteur du témoignage
         const testimonial = await Testimonial.findByPk(comment.testimonial_id);
@@ -228,6 +232,11 @@ class AdminModerationController {
             comment.testimonial_id,
             commenter.pseudo
           );
+          await pushService.notifyTestimonialCommented(
+            testimonial.user_id,
+            comment.testimonial_id,
+            commenter.pseudo
+          );
         }
       } else if (status === "REJECTED") {
         await Notification.commentRejected(
@@ -236,6 +245,7 @@ class AdminModerationController {
           comment.testimonial_id,
           moderation_note
         );
+        await pushService.notifyCommentRejected(comment.user_id, id, moderation_note);
       }
 
       res.json({

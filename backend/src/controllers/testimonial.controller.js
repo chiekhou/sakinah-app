@@ -3,6 +3,7 @@ const TestimonialLike = require("../models/TestimonialLike");
 const TestimonialComment = require("../models/TestimonialComment");
 const Notification = require("../models/Notification");
 const User = require("../models/User");
+const pushService = require("../services/push.service");
 
 /**
  * Controller pour gérer les témoignages
@@ -207,6 +208,11 @@ class TestimonialController {
       if (result.liked && testimonial.user_id !== userId) {
         const user = await User.findByPk(userId, { attributes: ["pseudo"] });
         await Notification.testimonialLiked(
+          testimonial.user_id,
+          id,
+          user.pseudo
+        );
+        await pushService.notifyTestimonialLiked(
           testimonial.user_id,
           id,
           user.pseudo
