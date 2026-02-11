@@ -116,12 +116,30 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Démarrage du serveur
-app.listen(PORT, () => {
-  console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-  console.log(`📍 Environnement: ${process.env.NODE_ENV || "development"}`);
-  // PRODUCTION: Ne pas exposer l'URL frontend dans les logs
-  // console.log(`🌐 URL: ${process.env.FRONTEND_URL}`);
+// Importer tous les modèles pour que sequelize.sync() crée les tables
+require("./models/User");
+require("./models/MoodEntry");
+require("./models/Quiz");
+require("./models/Article");
+require("./models/Scenario");
+require("./models/Conversation");
+require("./models/Testimonial");
+require("./models/TestimonialLike");
+require("./models/TestimonialComment");
+require("./models/Notification");
+require("./models/ParentalConsent");
+require("./models/FCMToken");
+
+// Synchronisation des tables PostgreSQL puis démarrage du serveur
+const sequelize = require("./config/database");
+sequelize.sync().then(() => {
+  console.log("✅ Tables PostgreSQL synchronisées");
+  app.listen(PORT, () => {
+    console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+    console.log(`📍 Environnement: ${process.env.NODE_ENV || "development"}`);
+  });
+}).catch((err) => {
+  console.error("❌ Erreur synchronisation PostgreSQL:", err.message);
 });
 
 module.exports = app;

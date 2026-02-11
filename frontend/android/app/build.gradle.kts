@@ -19,7 +19,7 @@ dependencies {
 }
 
 android {
-    namespace = "com.example.sakinah_app"
+    namespace = "com.sakinahapp.fr"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
