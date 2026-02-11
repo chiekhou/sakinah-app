@@ -743,7 +743,7 @@ class ApiService {
 
     final response = await http.post(
       Uri.parse('$baseUrl/notifications/fcm-token'),
-      headers: _getHeaders(token: token),
+      headers: _getHeaders(withAuth: true, token: token),
       body: jsonEncode({
         'fcm_token': fcmToken,
         'device_type': deviceType,
@@ -764,7 +764,7 @@ class ApiService {
 
     await http.delete(
       Uri.parse('$baseUrl/notifications/fcm-token'),
-      headers: _getHeaders(token: token),
+      headers: _getHeaders(withAuth: true, token: token),
       body: jsonEncode({'fcm_token': fcmToken}),
     );
   }

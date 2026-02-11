@@ -97,6 +97,9 @@ class AuthProvider with ChangeNotifier {
         _token = result['token'];
         _currentUser = result['user'];
         _isAuthenticated = true;
+
+        // Enregistrer le token FCM après connexion
+        await PushNotificationService.registerTokenAfterLogin();
       }
 
       _isLoading = false;

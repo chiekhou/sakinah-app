@@ -50,6 +50,7 @@ class ProfileController {
       const {
         bio,
         pseudo,
+        avatar_url,
         professional_title,
         accessibility_settings,
         notification_preferences,
@@ -74,6 +75,7 @@ class ProfileController {
 
       if (bio !== undefined) updateData.bio = bio;
       if (pseudo !== undefined) updateData.pseudo = pseudo;
+      if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
       if (professional_title !== undefined && user.isProfessional()) {
         updateData.professional_title = professional_title;
       }
