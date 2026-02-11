@@ -240,7 +240,7 @@ class ApiService {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/reset-password/$token'),
         headers: _getHeaders(),
-        body: json.encode({'new_password': newPassword}),
+        body: json.encode({'password': newPassword}),
       );
 
       if (response.statusCode == 200) {

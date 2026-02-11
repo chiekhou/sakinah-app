@@ -126,7 +126,8 @@ class PushNotificationService {
   static Future<void> _getFCMToken() async {
     try {
       _fcmToken = await _messaging.getToken();
-      debugPrint('📱 FCM Token: ${_fcmToken?.substring(0, 20)}...');
+      // PRODUCTION: Log sensible désactivé (expose FCM token partiel)
+      // debugPrint('📱 FCM Token: ${_fcmToken?.substring(0, 20)}...');
 
       if (_fcmToken != null) {
         await _sendTokenToServer(_fcmToken!);
@@ -184,7 +185,8 @@ class PushNotificationService {
 
   /// Gérer le tap sur une notification
   static void _handleNotificationTap(RemoteMessage message) {
-    debugPrint('📱 Notification tapée: ${message.data}');
+    // PRODUCTION: Log sensible désactivé (expose données notification)
+    // debugPrint('📱 Notification tapée: ${message.data}');
 
     // TODO: Naviguer vers l'écran approprié selon le type de notification
     final type = message.data['type'];

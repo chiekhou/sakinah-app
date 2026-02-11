@@ -16,6 +16,9 @@ class DeepLinkService {
   // GlobalKey pour accéder au navigateur
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+  /// Indique qu'un deep link a navigué avec succès
+  static bool hasNavigated = false;
+
   /// Initialiser le service de deep links
   Future<void> init() async {
     debugPrint('🔗 DeepLinkService: Initialisation...');
@@ -52,12 +55,13 @@ class DeepLinkService {
 
   /// Traiter un deep link
   Future<void> _handleDeepLink(Uri uri) async {
-    debugPrint('🔗 === DEEP LINK REÇU ===');
-    debugPrint('🔗 URI complet: $uri');
-    debugPrint('🔗 Scheme: ${uri.scheme}');
-    debugPrint('🔗 Host: ${uri.host}');
-    debugPrint('🔗 Path: ${uri.path}');
-    debugPrint('🔗 PathSegments: ${uri.pathSegments}');
+    // PRODUCTION: Logs sensibles désactivés (exposent URI et tokens)
+    // debugPrint('🔗 === DEEP LINK REÇU ===');
+    // debugPrint('🔗 URI complet: $uri');
+    // debugPrint('🔗 Scheme: ${uri.scheme}');
+    // debugPrint('🔗 Host: ${uri.host}');
+    // debugPrint('🔗 Path: ${uri.path}');
+    // debugPrint('🔗 PathSegments: ${uri.pathSegments}');
 
     String? action;
     String? token;
@@ -83,8 +87,9 @@ class DeepLinkService {
       }
     }
 
-    debugPrint('🔗 Action: $action');
-    debugPrint('🔗 Token: $token');
+    // PRODUCTION: Logs sensibles désactivés (exposent tokens)
+    // debugPrint('🔗 Action: $action');
+    // debugPrint('🔗 Token: $token');
 
     if (action == null) {
       debugPrint('🔗 Action non trouvée, abandon');
@@ -125,13 +130,14 @@ class DeepLinkService {
 
   /// Vérifier l'email automatiquement
   Future<void> _handleEmailVerification(String token) async {
-    debugPrint('🔗 === VÉRIFICATION EMAIL ===');
-    debugPrint('🔗 Token: $token');
+    // PRODUCTION: Logs sensibles désactivés (exposent token)
+    // debugPrint('🔗 === VÉRIFICATION EMAIL ===');
+    // debugPrint('🔗 Token: $token');
 
     try {
-      debugPrint('🔗 Appel API verifyEmail...');
+      // debugPrint('🔗 Appel API verifyEmail...');
       final result = await ApiService.verifyEmail(token);
-      debugPrint('🔗 Résultat API: $result');
+      // debugPrint('🔗 Résultat API: $result');
 
       if (result['success'] == true) {
         debugPrint('🔗 ✅ Email vérifié avec succès!');
@@ -153,7 +159,11 @@ class DeepLinkService {
 
   /// Naviguer vers la page de reset password avec le token
   Future<void> _navigateToResetPassword(String token) async {
-    debugPrint('🔗 Navigation reset password avec token: $token');
+    // PRODUCTION: Log sensible désactivé (expose token)
+    // debugPrint('🔗 Navigation reset password avec token: $token');
+
+    // Marquer immédiatement pour empêcher le splash screen de naviguer
+    hasNavigated = true;
 
     // Attendre que le navigator soit prêt (cold start)
     NavigatorState? navigator = navigatorKey.currentState;
@@ -175,13 +185,15 @@ class DeepLinkService {
       );
     } else {
       debugPrint('🔗 ⚠️ Navigator toujours null après $attempts tentatives');
+      hasNavigated = false; // Reset pour permettre au splash screen de prendre le relais
       _showMessage('Erreur de navigation', isSuccess: false);
     }
   }
 
   /// Gérer le consentement parental
   Future<void> _handleParentalConsent(String token) async {
-    debugPrint('🔗 Consentement parental avec token: $token');
+    // PRODUCTION: Log sensible désactivé (expose token)
+    // debugPrint('🔗 Consentement parental avec token: $token');
     _showMessage('Consentement parental en cours de traitement...', isSuccess: true);
   }
 

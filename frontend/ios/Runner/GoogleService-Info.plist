@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.sakinah.app</string>
+	<string>com.example.sakinahApp</string>
 	<key>PROJECT_ID</key>
 	<string>sakinah-app-96330</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:454468497506:ios:1592a8fda449a0ea5ea13b</string>
+	<string>1:454468497506:ios:1f6f7c839e43de955ea13b</string>
 </dict>
 </plist>

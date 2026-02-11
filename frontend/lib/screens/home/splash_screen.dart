@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/providers/auth_provider.dart';
+import 'package:sakinah_app/services/deep_link_service.dart';
 
 /// Écran de splash - Premier écran affiché au lancement
 /// Animation douce et accueillante pour inspirer confiance
@@ -56,6 +57,12 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 5000));
 
     if (!mounted) return;
+
+    // Si un deep link a déjà navigué, ne pas écraser
+    if (DeepLinkService.hasNavigated) {
+      debugPrint('🔗 Deep link a déjà navigué, splash screen ne redirige pas');
+      return;
+    }
 
     // Initialiser le provider d'authentification
     final authProvider = Provider.of<AuthProvider>(context, listen: false);

@@ -22,7 +22,8 @@ class UserService {
     if (userData != null && userData['id'] != null) {
       // Utilisateur connecté → utiliser son vrai ID
       _cachedUserId = userData['id'].toString();
-      debugPrint('🆔 Utilisateur connecté - ID: $_cachedUserId');
+      // PRODUCTION: Log sensible désactivé (expose user ID)
+      // debugPrint('🆔 Utilisateur connecté - ID: $_cachedUserId');
       return _cachedUserId!;
     }
 
