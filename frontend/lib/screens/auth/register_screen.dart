@@ -24,8 +24,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  String? _errorMessage;
-  String? _successMessage;
 
   // Rôle sélectionné
   String _selectedRole = 'USER';
@@ -98,31 +96,97 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool get _isMinor => ['6-12', '13-17'].contains(_selectedAgeRange);
 
+  void _showValidationPopup(String title, String message, {IconData icon = Icons.warning_amber_rounded, Color iconColor = Colors.orange}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: Icon(icon, color: iconColor, size: 48),
+        title: Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          message,
+          style: TextStyle(fontSize: 14, color: Colors.grey[700], height: 1.5),
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: const Text('Compris', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleRegister() async {
-    setState(() {
-      _errorMessage = null;
-      _successMessage = null;
-    });
+    final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
 
-    if (!_formKey.currentState!.validate()) {
+    // Validations manuelles avec popups
+    if (username.isEmpty) {
+      _showValidationPopup('Pseudo manquant', 'Entre ton nom d\'utilisateur.');
       return;
     }
-
-    // Vérifier l'acceptation des conditions
+    if (username.length < 3) {
+      _showValidationPopup('Pseudo trop court', 'Ton nom d\'utilisateur doit contenir au moins 3 caractères.');
+      return;
+    }
+    if (email.isEmpty) {
+      _showValidationPopup('Email manquant', 'Entre ton adresse email.');
+      return;
+    }
+    if (!email.contains('@')) {
+      _showValidationPopup('Email invalide', 'L\'adresse email que tu as entrée n\'est pas valide.');
+      return;
+    }
+    if (_isProfessional && _professionalTitleController.text.trim().isEmpty) {
+      _showValidationPopup('Titre manquant', 'Entre ton titre professionnel.');
+      return;
+    }
+    if (_isMinor && _parentEmailController.text.trim().isEmpty) {
+      _showValidationPopup('Email parent manquant', 'L\'email du parent ou tuteur est requis pour les mineurs.');
+      return;
+    }
+    if (_isMinor && !_parentEmailController.text.trim().contains('@')) {
+      _showValidationPopup('Email parent invalide', 'L\'adresse email du parent n\'est pas valide.');
+      return;
+    }
+    if (password.isEmpty) {
+      _showValidationPopup('Mot de passe manquant', 'Entre un mot de passe.');
+      return;
+    }
+    if (password.length < 8) {
+      _showValidationPopup('Mot de passe trop court', 'Ton mot de passe doit contenir au moins 8 caractères.\n\nActuellement : ${password.length} caractères.');
+      return;
+    }
+    if (confirmPassword.isEmpty) {
+      _showValidationPopup('Confirmation manquante', 'Confirme ton mot de passe.');
+      return;
+    }
+    if (confirmPassword != password) {
+      _showValidationPopup('Mots de passe différents', 'Les deux mots de passe ne correspondent pas.');
+      return;
+    }
     if (!_termsAccepted) {
-      setState(() {
-        _errorMessage =
-            'Tu dois accepter les conditions d\'utilisation et la politique de confidentialité';
-      });
+      _showValidationPopup('Conditions non acceptées', 'Tu dois accepter les conditions d\'utilisation et la politique de confidentialité.');
       return;
     }
-
-    // Vérifier le consentement parental pour les mineurs
     if (_isMinor && !_parentalConsentGiven) {
-      setState(() {
-        _errorMessage =
-            'Le consentement parental est requis pour les moins de 18 ans';
-      });
+      _showValidationPopup('Consentement parental requis', 'Le consentement d\'un parent ou tuteur est obligatoire pour les moins de 18 ans.');
       return;
     }
 
@@ -132,9 +196,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final result = await ApiService.register(
-        username: _usernameController.text.trim(),
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+        username: username,
+        email: email,
+        password: password,
         ageRange: _selectedAgeRange,
         role: _selectedRole,
         professionalTitle: _isProfessional
@@ -146,9 +210,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
 
       if (result['success']) {
-        setState(() {
-          _successMessage = result['message'];
-        });
+        _showValidationPopup(
+          'Compte créé !',
+          result['message'] ?? 'Vérifie ta boîte email pour activer ton compte.',
+          icon: Icons.check_circle_rounded,
+          iconColor: Colors.green,
+        );
 
         // Attendre 2 secondes puis naviguer vers l'écran de vérification email
         await Future.delayed(const Duration(seconds: 2));
@@ -156,17 +223,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         Navigator.of(context).pushReplacementNamed(
           '/email-verification',
-          arguments: _emailController.text.trim(),
+          arguments: email,
         );
       } else {
-        setState(() {
-          _errorMessage = result['error'];
-        });
+        _showValidationPopup(
+          'Inscription impossible',
+          result['error'] ?? 'Une erreur est survenue.',
+          icon: Icons.error_outline_rounded,
+          iconColor: Colors.red,
+        );
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Une erreur est survenue. Réessaie plus tard.';
-      });
+      if (mounted) {
+        _showValidationPopup(
+          'Erreur',
+          'Une erreur est survenue. Réessaie plus tard.',
+          icon: Icons.error_outline_rounded,
+          iconColor: Colors.red,
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -215,16 +290,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
 
                 const SizedBox(height: 32),
-
-                // Messages
-                if (_successMessage != null) ...[
-                  SuccessMessage(message: _successMessage!),
-                  const SizedBox(height: 20),
-                ],
-                if (_errorMessage != null) ...[
-                  ErrorMessage(message: _errorMessage!),
-                  const SizedBox(height: 20),
-                ],
 
                 // Sélection du rôle
                 Text(

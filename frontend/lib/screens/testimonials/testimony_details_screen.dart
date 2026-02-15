@@ -363,10 +363,11 @@ class _TestimonyDetailScreenState extends State<TestimonyDetailScreen> {
         ),
         const SizedBox(height: 16),
         if (comments.isEmpty)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.3,
+            child: Center(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
                     Icons.chat_bubble_outline,
@@ -377,11 +378,13 @@ class _TestimonyDetailScreenState extends State<TestimonyDetailScreen> {
                   Text(
                     'Aucun commentaire pour le moment',
                     style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Sois le premier à réagir !',
                     style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),

@@ -67,6 +67,7 @@ class _MainScreenState extends State<MainScreen> {
     final isAdmin = authProvider.currentUser?['role'] == 'ADMIN';
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           // Écrans principaux

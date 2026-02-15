@@ -224,13 +224,16 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _messages.isEmpty ? _buildEmptyState() : _buildMessageList(),
-          ),
-          _buildInputArea(),
-        ],
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Column(
+          children: [
+            Expanded(
+              child: _messages.isEmpty ? _buildEmptyState() : _buildMessageList(),
+            ),
+            _buildInputArea(),
+          ],
+        ),
       ),
     );
   }
@@ -315,6 +318,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildMessageList() {
     return ListView.builder(
       controller: _scrollController,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.all(16),
       itemCount: _messages.length + (_isTyping ? 1 : 0),
       itemBuilder: (context, index) {
@@ -453,8 +457,14 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildInputArea() {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: bottomInset > 0 ? bottomInset + 8 : 16,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF2D2D44),
         boxShadow: [
@@ -466,6 +476,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
       child: SafeArea(
+        bottom: bottomInset == 0,
         child: Row(
           children: [
             Expanded(
