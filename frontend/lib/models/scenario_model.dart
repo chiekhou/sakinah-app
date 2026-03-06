@@ -25,14 +25,22 @@ class Scenario {
 
   String get themeEmoji {
     switch (theme) {
-      case 'harcelement':
-        return '🛡️';
       case 'stress':
         return '😰';
-      case 'conflit':
-        return '🤝';
+      case 'estime':
+        return '💪';
+      case 'harcelement':
+        return '🛡️';
+      case 'famille':
+        return '🏠';
       case 'emotions':
         return '💭';
+      case 'sommeil':
+        return '😴';
+      case 'sante_mentale':
+        return '🧠';
+      case 'conflit':
+        return '🤝';
       default:
         return '🎭';
     }

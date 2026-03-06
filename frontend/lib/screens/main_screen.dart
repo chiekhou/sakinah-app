@@ -70,8 +70,8 @@ class _MainScreenState extends State<MainScreen> {
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          // Écrans principaux
-          _screens[_currentIndex],
+          // Écrans principaux - IndexedStack préserve l'état lors des changements d'onglets
+          IndexedStack(index: _currentIndex, children: _screens),
 
           // Boutons flottants (seulement si connecté)
           if (isConnected) ...[

@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/models/article_model.dart';
 import 'package:sakinah_app/services/api_service.dart';
+import 'package:sakinah_app/widgets/description_card.dart';
 
 class ArticleDetailScreen extends StatefulWidget {
   final String articleId;
@@ -66,6 +67,12 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeader(),
+                if (_article!.summary.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: DescriptionCard(description: _article!.summary),
+                  ),
+                const SizedBox(height: 16),
                 _buildContent(),
                 const SizedBox(height: 32),
               ],
@@ -87,9 +94,10 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
             gradient: _getThemeGradient(_article!.theme),
           ),
           child: Center(
-            child: Text(
-              _getThemeEmoji(_article!.theme),
-              style: const TextStyle(fontSize: 80),
+            child: const Icon(
+              Icons.article_rounded,
+              size: 64,
+              color: Colors.white,
             ),
           ),
         ),

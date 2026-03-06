@@ -130,6 +130,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  void _showEmailAlreadyUsedDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: const Icon(Icons.email_outlined, color: Colors.orange, size: 48),
+        title: const Text(
+          'Email déjà utilisé',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          'Cette adresse email est déjà associée à un compte Sakinah. C\'est tout à fait normal si tu t\'es déjà inscrit !\n\nTu peux te connecter directement ou réinitialiser ton mot de passe si tu l\'as oublié.',
+          style: TextStyle(fontSize: 14, color: Colors.grey[700], height: 1.5),
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Navigator.of(context).pushReplacementNamed('/login');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: const Text('Se connecter', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text('Utiliser un autre email', style: TextStyle(color: Colors.grey[600])),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleRegister() async {
     final username = _usernameController.text.trim();
     final email = _emailController.text.trim();
@@ -226,12 +270,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
           arguments: email,
         );
       } else {
-        _showValidationPopup(
-          'Inscription impossible',
-          result['error'] ?? 'Une erreur est survenue.',
-          icon: Icons.error_outline_rounded,
-          iconColor: Colors.red,
-        );
+        final errorMsg = (result['error'] ?? '') as String;
+        if (errorMsg.toLowerCase().contains('email') &&
+            (errorMsg.toLowerCase().contains('déjà') ||
+                errorMsg.toLowerCase().contains('already'))) {
+          _showEmailAlreadyUsedDialog();
+        } else {
+          _showValidationPopup(
+            'Inscription impossible',
+            errorMsg.isEmpty ? 'Une erreur est survenue.' : errorMsg,
+            icon: Icons.error_outline_rounded,
+            iconColor: Colors.red,
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

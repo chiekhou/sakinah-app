@@ -127,8 +127,15 @@ class _ChatScreenState extends State<ChatScreen> {
         elevation: 0,
         automaticallyImplyLeading: false,
         leading: IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.white),
-          onPressed: () async {
+          icon: Icon(
+            Icons.delete_outline,
+            color: _messages.isEmpty
+                ? Colors.white.withValues(alpha: 0.3)
+                : Colors.white,
+          ),
+          onPressed: _messages.isEmpty
+              ? null
+              : () async {
             final messenger = ScaffoldMessenger.of(context);
             final confirm = await showDialog<bool>(
               context: context,

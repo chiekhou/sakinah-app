@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/providers/auth_provider.dart';
+import 'package:sakinah_app/screens/mood/mood_barometer_screen.dart';
 import 'package:sakinah_app/services/api_service.dart';
 import 'package:sakinah_app/widgets/custom_wigdet.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Écran de profil
 /// Affiche différentes options selon l'état de connexion
@@ -121,6 +123,38 @@ class ProfileScreen extends StatelessWidget {
 
             _buildMenuCard(
               context,
+              icon: Icons.mood,
+              title: 'Mon humeur du jour',
+              subtitle: 'Modifier mon humeur à tout moment',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (ctx) => MoodBarometerScreen(
+                      onMoodSelected: (mood) async {
+                        final prefs = await SharedPreferences.getInstance();
+                        final today = DateTime.now().toIso8601String().split(
+                          'T',
+                        )[0];
+                        await prefs.setString('mood_last_date', today);
+                        await prefs.setInt('mood_last_level', mood);
+                        if (ctx.mounted) {
+                          // Recharge MainScreen avec la nouvelle humeur
+                          // (même comportement qu'au démarrage)
+                          Navigator.of(ctx).pushNamedAndRemoveUntil(
+                            '/mood-navigator',
+                            (route) => false,
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            _buildMenuCard(
+              context,
               icon: Icons.history,
               title: 'Mon historique',
               subtitle: 'Humeurs, quiz complétés',
@@ -216,12 +250,9 @@ class ProfileScreen extends StatelessWidget {
                 if (confirm == true) {
                   await authProvider.logout();
                   if (context.mounted) {
-                    // Rester sur l'app mais en mode anonyme
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Déconnexion réussie'),
-                        backgroundColor: AppTheme.success,
-                      ),
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      '/mood-navigator',
+                      (route) => false,
                     );
                   }
                 }
@@ -394,10 +425,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                Text(
-                  '•',
-                  style: TextStyle(color: AppTheme.textSecondary),
-                ),
+                Text('•', style: TextStyle(color: AppTheme.textSecondary)),
                 TextButton(
                   onPressed: () {
                     Navigator.pushNamed(context, '/terms-of-service');
@@ -450,7 +478,9 @@ class ProfileScreen extends StatelessWidget {
     required VoidCallback onTap,
     bool isHighlighted = false,
   }) {
-    final Color accentColor = isHighlighted ? AppTheme.primaryColor : AppTheme.primary;
+    final Color accentColor = isHighlighted
+        ? AppTheme.primaryColor
+        : AppTheme.primary;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -488,16 +518,14 @@ class ProfileScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: isHighlighted ? accentColor : AppTheme.textPrimary,
+                          color: isHighlighted
+                              ? accentColor
+                              : AppTheme.textPrimary,
                         ),
                       ),
                       if (isHighlighted) ...[
                         const SizedBox(width: 8),
-                        Icon(
-                          Icons.favorite,
-                          size: 16,
-                          color: accentColor,
-                        ),
+                        Icon(Icons.favorite, size: 16, color: accentColor),
                       ],
                     ],
                   ),

@@ -5,7 +5,9 @@ import 'package:sakinah_app/models/quiz_model.dart';
 import 'package:sakinah_app/providers/auth_provider.dart';
 import 'package:sakinah_app/screens/quiz/quiz_result_screen.dart';
 import 'package:sakinah_app/services/api_service.dart';
+import 'package:sakinah_app/services/progress_service.dart';
 import 'package:sakinah_app/services/user_service.dart';
+import 'package:sakinah_app/widgets/description_card.dart';
 
 class QuizDetailScreen extends StatefulWidget {
   final String quizId;
@@ -96,6 +98,9 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
         token: token,
       );
 
+      // Marquer le quiz comme complété
+      await ProgressService.markQuizCompleted(widget.quizId);
+
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -178,7 +183,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
                   Text(
                     _quiz!.title,
                     style: const TextStyle(
@@ -200,14 +205,8 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                   children: [
                     // Description
                     if (_quiz!.description.isNotEmpty) ...[
-                      Text(
-                        _quiz!.description,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
+                      DescriptionCard(description: _quiz!.description),
+                      const SizedBox(height: 24),
                     ],
 
                     // Informations
@@ -549,5 +548,28 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
         ),
       ),
     );
+  }
+
+  String get themeEmoji {
+    switch (_quiz!.theme) {
+      case 'stress':
+        return '😰';
+      case 'estime':
+        return '💪';
+      case 'harcelement':
+        return '🛡️';
+      case 'emotions':
+        return '💭';
+      case 'famille':
+        return '🏠';
+      case 'sommeil':
+        return '😴';
+      case 'conflit':
+        return '🤝';
+      case 'sante_mentale':
+        return '🧠 ';
+      default:
+        return '🎭';
+    }
   }
 }

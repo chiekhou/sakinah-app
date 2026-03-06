@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sakinah_app/screens/auth/email_verification_screen.dart';
 import 'package:sakinah_app/screens/auth/forgot_password_screen.dart';
 import 'package:sakinah_app/screens/auth/login_screen.dart';
@@ -13,6 +14,7 @@ import 'package:sakinah_app/screens/mood/mood_barometer_screen.dart';
 //import 'package:sakinah_app/screens/mood/mascote_barometer_mascote_screen.dart';
 import 'package:sakinah_app/providers/auth_provider.dart';
 import 'package:sakinah_app/providers/mood_provider.dart';
+import 'package:sakinah_app/providers/testimonials_provider.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/screens/notifications/notifications_screen.dart';
 import 'package:sakinah_app/screens/testimonials/my_testimonial_screen.dart';
@@ -85,6 +87,7 @@ class _MyAppState extends State<MyApp> {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => MoodProvider()),
+        ChangeNotifierProvider(create: (_) => TestimonialsProvider()),
       ],
       child: MaterialApp(
         title: 'Sakinah - Bien-être Mental',
@@ -146,24 +149,84 @@ class AppNavigator extends StatefulWidget {
 class _AppNavigatorState extends State<AppNavigator> {
   int? _selectedMood;
   bool _hasSelectedMood = false;
+  bool _isCheckingMood = true;
 
-  void _onMoodSelected(int mood) {
+  @override
+  void initState() {
+    super.initState();
+    _checkTodayMood();
+  }
+
+  Future<void> _checkTodayMood() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastDate = prefs.getString('mood_last_date') ?? '';
+    final today = DateTime.now().toIso8601String().split('T')[0];
+
+    if (mounted) {
+      if (lastDate == today) {
+        // Humeur déjà sélectionnée aujourd'hui → skip le baromètre
+        setState(() {
+          _selectedMood = prefs.getInt('mood_last_level');
+          _hasSelectedMood = true;
+          _isCheckingMood = false;
+        });
+      } else {
+        setState(() => _isCheckingMood = false);
+      }
+    }
+  }
+
+  Future<void> _onMoodSelected(int mood) async {
+    // Sauvegarder la date et le niveau d'humeur
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().split('T')[0];
+    await prefs.setString('mood_last_date', today);
+    await prefs.setInt('mood_last_level', mood);
+
     setState(() {
       _selectedMood = mood;
       _hasSelectedMood = true;
+    });
+
+    // Afficher un rappel après redirection
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.white, size: 18),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Tu peux modifier ton humeur à tout moment depuis ton profil 💚',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+            duration: const Duration(seconds: 4),
+            backgroundColor: AppTheme.primaryColor,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Si l'humeur n'a pas encore été sélectionnée
-    // Afficher le baromètre d'humeur
+    if (_isCheckingMood) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     if (!_hasSelectedMood) {
       return MoodBarometerScreen(onMoodSelected: _onMoodSelected);
     }
 
-    // Une fois l'humeur sélectionnée
-    // Naviguer vers l'écran principal avec l'humeur initiale
     return MainScreen(initialMood: _selectedMood);
   }
 }

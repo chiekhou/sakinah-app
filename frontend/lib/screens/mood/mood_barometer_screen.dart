@@ -398,6 +398,24 @@ class _MoodBarometerScreenState extends State<MoodBarometerScreen>
               ),
             ),
           ),
+
+          const SizedBox(height: 12),
+
+          // Astuce : modifier l'humeur depuis le profil
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.info_outline, size: 14, color: Colors.grey[500]),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Tu peux modifier ton humeur à tout moment depuis ton profil',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
