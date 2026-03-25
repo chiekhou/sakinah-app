@@ -176,20 +176,31 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(label, textAlign: TextAlign.center),
-        selected: isSelected,
-        onSelected: (selected) {
-          _filterByTheme(selected ? theme : null);
-        },
-        backgroundColor: Colors.white,
-        selectedColor: AppTheme.primaryColor,
-        labelStyle: TextStyle(
-          color: isSelected ? Colors.white : AppTheme.textPrimary,
-          fontWeight: FontWeight.w600,
+      child: GestureDetector(
+        onTap: () => _filterByTheme(isSelected ? null : theme),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? AppTheme.primaryColor : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isSelected ? Colors.white : AppTheme.textPrimary,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        showCheckmark: false,
       ),
     );
   }

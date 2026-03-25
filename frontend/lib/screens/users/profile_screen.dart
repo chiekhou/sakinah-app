@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:provider/provider.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/providers/auth_provider.dart';
@@ -218,6 +219,30 @@ class ProfileScreen extends StatelessWidget {
                 Navigator.pushNamed(context, '/support');
               },
               isHighlighted: true,
+            ),
+
+            // Évaluer l'application
+            _buildMenuCard(
+              context,
+              icon: Icons.star_outline,
+              title: 'Évaluer l\'application',
+              subtitle: 'Donne ton avis sur l\'App Store',
+              onTap: () async {
+                final inAppReview = InAppReview.instance;
+                if (await inAppReview.isAvailable()) {
+                  await inAppReview.requestReview();
+                } else {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'La notation n\'est pas disponible pour le moment.',
+                        ),
+                      ),
+                    );
+                  }
+                }
+              },
             ),
 
             const SizedBox(height: 16),
