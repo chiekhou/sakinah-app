@@ -3,6 +3,7 @@ import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/models/article_model.dart';
 import 'package:sakinah_app/screens/articles/articles_details_screen.dart';
 import 'package:sakinah_app/services/api_service.dart';
+import 'package:sakinah_app/services/progress_service.dart';
 
 class ArticleListScreen extends StatefulWidget {
   final VoidCallback? onBackPressed;
@@ -19,6 +20,7 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
   bool _isLoading = true;
   String? _selectedTheme;
   List<String> _themes = [];
+  Set<String> _readArticleIds = {};
 
   @override
   void initState() {
@@ -30,7 +32,14 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final data = await _apiService.getArticles();
+      final results = await Future.wait([
+        _apiService.getArticles(),
+        ProgressService.getReadArticleIds(),
+      ]);
+
+      final data = results[0] as Map<String, dynamic>;
+      final readIds = results[1] as Set<String>;
+
       final articles = (data['articles'] as List)
           .map((json) => Article.fromJson(json))
           .toList();
@@ -42,6 +51,7 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
         _articles = articles;
         _filteredArticles = articles;
         _themes = themes;
+        _readArticleIds = readIds;
         _isLoading = false;
       });
     } catch (e) {
@@ -166,20 +176,31 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(label, textAlign: TextAlign.center),
-        selected: isSelected,
-        onSelected: (selected) {
-          _filterByTheme(selected ? theme : null);
-        },
-        backgroundColor: Colors.white,
-        selectedColor: AppTheme.primaryColor,
-        labelStyle: TextStyle(
-          color: isSelected ? Colors.white : AppTheme.textPrimary,
-          fontWeight: FontWeight.w600,
+      child: GestureDetector(
+        onTap: () => _filterByTheme(isSelected ? null : theme),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? AppTheme.primaryColor : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isSelected ? Colors.white : AppTheme.textPrimary,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        showCheckmark: false,
       ),
     );
   }
@@ -281,14 +302,18 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
   }
 
   Widget _buildFeaturedArticleCard(Article article) {
+    final isRead = _readArticleIds.contains(article.id);
+
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ArticleDetailScreen(articleId: article.id),
           ),
         );
+        final ids = await ProgressService.getReadArticleIds();
+        if (mounted) setState(() => _readArticleIds = ids);
       },
       child: Container(
         height: 200,
@@ -305,6 +330,28 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
         ),
         child: Stack(
           children: [
+            // Badge "Lu"
+            if (isRead)
+              Positioned(
+                top: 12,
+                left: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check, color: Colors.white, size: 12),
+                      SizedBox(width: 3),
+                      Text('Lu', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ),
+
             // Badge featured
             Positioned(
               top: 12,
@@ -393,19 +440,26 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
   }
 
   Widget _buildArticleCard(Article article) {
+    final isRead = _readArticleIds.contains(article.id);
+
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ArticleDetailScreen(articleId: article.id),
           ),
         );
+        final ids = await ProgressService.getReadArticleIds();
+        if (mounted) setState(() => _readArticleIds = ids);
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isRead ? const Color(0xFFF0FFF4) : Colors.white,
           borderRadius: BorderRadius.circular(16),
+          border: isRead
+              ? Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.4), width: 1.5)
+              : null,
           boxShadow: [
             BoxShadow(
               color: AppTheme.primaryColor.withValues(alpha: 0.1),
@@ -417,22 +471,46 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
         child: Row(
           children: [
             // Icône thème
-            Container(
-              width: 80,
-              height: 100,
-              decoration: BoxDecoration(
-                gradient: _getThemeGradient(article.theme),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
+            Stack(
+              children: [
+                Container(
+                  width: 80,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    gradient: _getThemeGradient(article.theme),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      bottomLeft: Radius.circular(16),
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      article.themeEmoji,
+                      style: const TextStyle(fontSize: 36),
+                    ),
+                  ),
                 ),
-              ),
-              child: Center(
-                child: Text(
-                  article.themeEmoji,
-                  style: const TextStyle(fontSize: 36),
-                ),
-              ),
+                if (isRead)
+                  Positioned(
+                    top: 6,
+                    left: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check, color: Colors.white, size: 10),
+                          SizedBox(width: 2),
+                          Text('Lu', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
             ),
 
             // Contenu
@@ -518,10 +596,19 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
         );
       case 'famille':
         return const LinearGradient(
-          colors: [
-            Color.fromARGB(255, 161, 219, 52),
-            Color.fromARGB(255, 161, 219, 52),
-          ],
+          colors: [Color(0xFF56AB2F), Color(0xFFA8E063)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'sante_mentale':
+        return const LinearGradient(
+          colors: [Color(0xFF11998E), Color(0xFF38EF7D)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'conflit':
+        return const LinearGradient(
+          colors: [Color(0xFFFF6B6B), Color(0xFFFFE66D)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/services/api_service.dart';
+import 'package:sakinah_app/services/progress_service.dart';
 import 'package:sakinah_app/models/scenario_model.dart';
+import 'package:sakinah_app/widgets/description_card.dart';
 
 class ScenarioDetailScreen extends StatefulWidget {
   final String scenarioId;
@@ -48,6 +50,10 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
       _stepHistory.add(_currentStepKey);
       _currentStepKey = nextStepKey;
     });
+    // Marquer le scénario comme complété si on atteint une étape finale
+    if (_scenario!.getStep(nextStepKey)?.isEndStep == true) {
+      ProgressService.markScenarioCompleted(widget.scenarioId);
+    }
   }
 
   void _goBack() {
@@ -121,9 +127,10 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
                       color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: Text(
-                      themeEmoji,
-                      style: const TextStyle(fontSize: 64),
+                    child: const Icon(
+                      Icons.theater_comedy_rounded,
+                      size: 64,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -148,15 +155,8 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
                   children: [
                     // Description
                     if (_scenario!.description.isNotEmpty) ...[
-                      Text(
-                        _scenario!.description,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: AppTheme.textPrimary,
-                          height: 1.6,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
+                      DescriptionCard(description: _scenario!.description),
+                      const SizedBox(height: 24),
                     ],
 
                     const SizedBox(height: 24),

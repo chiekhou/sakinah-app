@@ -20,6 +20,8 @@ class QuizResultScreen extends StatefulWidget {
 class _QuizResultScreenState extends State<QuizResultScreen> {
   late ConfettiController _confettiController;
   bool _showDetails = false;
+  final _scrollController = ScrollController();
+  final _detailsKey = GlobalKey();
 
   @override
   void initState() {
@@ -28,7 +30,6 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
       duration: const Duration(seconds: 3),
     );
 
-    // Lancer les confettis si bon score
     if (widget.result.score >= 60) {
       Future.delayed(const Duration(milliseconds: 500), () {
         _confettiController.play();
@@ -39,6 +40,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
   @override
   void dispose() {
     _confettiController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -53,17 +55,18 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
               children: [
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 12),
                         _buildScoreCard(),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 20),
                         _buildStatsCards(),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 20),
                         _buildDetailsButton(),
                         if (_showDetails) ...[
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
                           _buildDetailedResults(),
                         ],
                       ],
@@ -108,7 +111,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [scoreColor, scoreColor.withValues(alpha: 0.7)],
@@ -119,35 +122,35 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
         boxShadow: [
           BoxShadow(
             color: scoreColor.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         children: [
-          Text(widget.result.emoji, style: const TextStyle(fontSize: 72)),
-          const SizedBox(height: 16),
+          Text(widget.result.emoji, style: const TextStyle(fontSize: 52)),
+          const SizedBox(height: 8),
           const Text(
             'Score',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               color: Colors.white,
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             '${widget.result.score}%',
             style: const TextStyle(
-              fontSize: 56,
+              fontSize: 48,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
@@ -155,7 +158,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
             child: Text(
               widget.result.message,
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 14,
                 color: Colors.white,
                 fontWeight: FontWeight.w500,
               ),
@@ -198,7 +201,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     Color color,
   ) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -206,20 +209,20 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 40),
-          const SizedBox(height: 12),
+          Icon(icon, color: color, size: 32),
+          const SizedBox(height: 8),
           Text(
             value,
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
           ),
         ],
       ),
@@ -229,31 +232,45 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
   Widget _buildDetailsButton() {
     return OutlinedButton.icon(
       onPressed: () {
+        final wasShowing = _showDetails;
         setState(() {
           _showDetails = !_showDetails;
         });
+        // Scroll vers les détails dès qu'ils apparaissent
+        if (!wasShowing) {
+          Future.delayed(const Duration(milliseconds: 150), () {
+            if (_detailsKey.currentContext != null) {
+              Scrollable.ensureVisible(
+                _detailsKey.currentContext!,
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeInOut,
+              );
+            }
+          });
+        }
       },
       icon: Icon(_showDetails ? Icons.expand_less : Icons.expand_more),
       label: Text(_showDetails ? 'Masquer les détails' : 'Voir les détails'),
       style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       ),
     );
   }
 
   Widget _buildDetailedResults() {
     return Column(
+      key: _detailsKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Détails des réponses',
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
             color: AppTheme.textPrimary,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         ...widget.result.details.map((detail) => _buildQuestionDetail(detail)),
       ],
     );
@@ -261,8 +278,8 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
 
   Widget _buildQuestionDetail(QuestionResult detail) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -280,8 +297,8 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
           Row(
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
                   color: detail.isCorrect
                       ? AppTheme.successColor
@@ -294,22 +311,24 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
+                      fontSize: 13,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Icon(
                 detail.isCorrect ? Icons.check_circle : Icons.cancel,
                 color: detail.isCorrect
                     ? AppTheme.successColor
                     : AppTheme.errorColor,
+                size: 20,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Text(
                 detail.isCorrect ? 'Bonne réponse' : 'Mauvaise réponse',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: detail.isCorrect
                       ? AppTheme.successColor
@@ -318,22 +337,22 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           // Question
           Text(
             detail.question,
             style: const TextStyle(
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
               color: AppTheme.textPrimary,
             ),
           ),
 
           if (!detail.isCorrect) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: AppTheme.errorColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
@@ -342,15 +361,15 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
                 children: [
                   const Icon(
                     Icons.info_outline,
-                    size: 16,
+                    size: 14,
                     color: AppTheme.errorColor,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       'La bonne réponse était : ${String.fromCharCode(65 + detail.correctAnswer)}',
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: AppTheme.errorColor,
                         fontWeight: FontWeight.w500,
                       ),
@@ -361,11 +380,10 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
             ),
           ],
 
-          // Explication
           if (detail.explanation != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: AppTheme.infoColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
@@ -375,15 +393,15 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
                 children: [
                   const Icon(
                     Icons.lightbulb_outline,
-                    size: 16,
+                    size: 14,
                     color: AppTheme.infoColor,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       detail.explanation!,
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: AppTheme.textPrimary,
                         height: 1.4,
                       ),
@@ -400,7 +418,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
 
   Widget _buildActionButtons() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -411,26 +429,27 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
-          SizedBox(
-            width: double.infinity,
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: const Text('Refaire le quiz'),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             child: ElevatedButton(
               onPressed: () {
                 Navigator.of(context).popUntil((route) => route.isFirst);
               },
-              child: const Text('Retour à l\'accueil'),
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Refaire le quiz'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: const Text('Accueil'),
             ),
           ),
         ],

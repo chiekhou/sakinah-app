@@ -14,7 +14,7 @@ dependencies {
   implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
 
   // When using the BoM, don't specify versions in Firebase dependencies
-  coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.2")
+  coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 val keystoreProperties = Properties()

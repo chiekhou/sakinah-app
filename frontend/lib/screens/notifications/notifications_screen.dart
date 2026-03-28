@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/providers/auth_provider.dart';
 import 'package:sakinah_app/services/notification_service.dart';
+import 'package:sakinah_app/screens/testimonials/testimony_details_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -248,6 +249,36 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
+  void _navigateToRelated(Map<String, dynamic> notification) {
+    final type = notification['type'];
+    final relatedId = notification['related_id'];
+    final metadata = notification['metadata'] as Map<String, dynamic>?;
+
+    String? testimonialId;
+
+    switch (type) {
+      case 'TESTIMONIAL_APPROVED':
+      case 'TESTIMONIAL_REJECTED':
+      case 'TESTIMONIAL_LIKED':
+      case 'TESTIMONIAL_COMMENTED':
+        testimonialId = relatedId;
+        break;
+      case 'COMMENT_APPROVED':
+      case 'COMMENT_REJECTED':
+        testimonialId = metadata?['testimonialId'];
+        break;
+    }
+
+    if (testimonialId != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TestimonyDetailScreen(testimonialId: testimonialId!),
+        ),
+      );
+    }
+  }
+
   Widget _buildNotificationCard(Map<String, dynamic> notification) {
     final id = notification['id'];
     final type = notification['type'];
@@ -314,6 +345,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             if (!isRead) {
               _markAsRead(id);
             }
+            _navigateToRelated(notification);
           },
           borderRadius: BorderRadius.circular(16),
           child: Container(

@@ -49,8 +49,58 @@ class _CreateTestimonyScreenState extends State<CreateTestimonyScreen> {
     super.dispose();
   }
 
+  void _showValidationPopup(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 48),
+        title: Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          message,
+          style: TextStyle(fontSize: 14, color: Colors.grey[700], height: 1.5),
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: const Text('Compris', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _submitTestimony() async {
-    if (!_formKey.currentState!.validate()) return;
+    final content = _contentController.text.trim();
+
+    if (content.isEmpty) {
+      _showValidationPopup(
+        'Témoignage vide',
+        'Écris quelque chose pour partager ton témoignage avant de publier.',
+      );
+      return;
+    }
+
+    if (content.length < 10) {
+      _showValidationPopup(
+        'Témoignage trop court',
+        'Ton témoignage doit contenir au moins 10 caractères.\n\nActuellement : ${content.length} caractère${content.length > 1 ? 's' : ''}.',
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 

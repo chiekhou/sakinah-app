@@ -82,6 +82,9 @@ dependencies:
   # Image picker
   image_picker: ^1.0.7
 
+  # Évaluation de l'application
+  in_app_review: ^2.0.9
+
   # URL launcher for email and links
   url_launcher: ^6.2.5
   flutter_dotenv: ^6.0.0

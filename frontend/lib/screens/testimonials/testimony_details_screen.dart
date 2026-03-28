@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/providers/auth_provider.dart';
+import 'package:sakinah_app/providers/testimonials_provider.dart';
 import 'package:sakinah_app/services/testimonial_service.dart';
 import 'package:sakinah_app/utils/auth_helper.dart';
 
@@ -61,6 +62,10 @@ class _TestimonyDetailScreenState extends State<TestimonyDetailScreen> {
 
   Future<void> _toggleLike() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final testimonialsProvider = Provider.of<TestimonialsProvider>(
+      context,
+      listen: false,
+    );
 
     final canProceed = await AuthHelper.requireAuth(
       context,
@@ -70,11 +75,11 @@ class _TestimonyDetailScreenState extends State<TestimonyDetailScreen> {
     if (!canProceed) return;
 
     try {
-      await TestimonialService.toggleLike(
-        token: authProvider.token!,
-        testimonialId: widget.testimonialId,
+      // Utilise le provider centralisé → synchronise aussi la liste
+      await testimonialsProvider.toggleLike(
+        widget.testimonialId,
+        authProvider.token!,
       );
-      _loadTestimony();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -223,9 +228,7 @@ class _TestimonyDetailScreenState extends State<TestimonyDetailScreen> {
     final moodLevel = _testimony!['mood_level'];
     final content = _testimony!['content'] ?? '';
     final author = _testimony!['author'];
-    final likesCount = _testimony!['likes_count'] ?? 0;
     final commentsCount = _testimony!['comments_count'] ?? 0;
-    final hasLiked = _testimony!['has_liked'] ?? false;
     final createdAt = _testimony!['created_at'];
 
     return Card(
@@ -287,63 +290,81 @@ class _TestimonyDetailScreenState extends State<TestimonyDetailScreen> {
             const SizedBox(height: 20),
             const Divider(),
             const SizedBox(height: 12),
-            // Actions
-            Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: _toggleLike,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            hasLiked ? Icons.favorite : Icons.favorite_border,
-                            size: 24,
-                            color: hasLiked ? Colors.red : Colors.grey[600],
+            // Actions — lit l'état depuis le provider (source de vérité commune)
+            Consumer<TestimonialsProvider>(
+              builder: (context, provider, _) {
+                final inList = provider.containsTestimonial(
+                  widget.testimonialId,
+                );
+                final hasLiked = inList
+                    ? provider.getLikeState(widget.testimonialId)
+                    : _testimony!['has_liked'] as bool? ?? false;
+                final likesCount = inList
+                    ? provider.getLikesCount(widget.testimonialId)
+                    : _testimony!['likes_count'] as int? ?? 0;
+
+                return Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: _toggleLike,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                hasLiked
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                size: 24,
+                                color: hasLiked ? Colors.red : Colors.grey[600],
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '$likesCount',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: hasLiked
+                                      ? Colors.red
+                                      : Colors.grey[600],
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '$likesCount',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: hasLiked ? Colors.red : Colors.grey[600],
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                Container(width: 1, height: 24, color: Colors.grey[300]),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.chat_bubble_outline,
-                          size: 24,
-                          color: Colors.grey[600],
+                    Container(width: 1, height: 24, color: Colors.grey[300]),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.chat_bubble_outline,
+                              size: 24,
+                              color: Colors.grey[600],
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '$commentsCount',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '$commentsCount',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -363,10 +384,11 @@ class _TestimonyDetailScreenState extends State<TestimonyDetailScreen> {
         ),
         const SizedBox(height: 16),
         if (comments.isEmpty)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.3,
+            child: Center(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
                     Icons.chat_bubble_outline,
@@ -377,11 +399,13 @@ class _TestimonyDetailScreenState extends State<TestimonyDetailScreen> {
                   Text(
                     'Aucun commentaire pour le moment',
                     style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Sois le premier à réagir !',
                     style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),

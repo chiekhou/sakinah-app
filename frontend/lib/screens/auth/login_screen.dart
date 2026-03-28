@@ -20,7 +20,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isLoading = false;
   bool _obscurePassword = true;
-  String? _errorMessage;
 
   @override
   void dispose() {
@@ -29,14 +28,54 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    // Réinitialiser le message d'erreur
-    setState(() {
-      _errorMessage = null;
-    });
+  void _showValidationPopup(String title, String message, {IconData icon = Icons.warning_amber_rounded, Color iconColor = Colors.orange}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: Icon(icon, color: iconColor, size: 48),
+        title: Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          message,
+          style: TextStyle(fontSize: 14, color: Colors.grey[700], height: 1.5),
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: const Text('Compris', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-    // Valider le formulaire
-    if (!_formKey.currentState!.validate()) {
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty) {
+      _showValidationPopup('Email manquant', 'Entre ton adresse email pour te connecter.');
+      return;
+    }
+    if (!email.contains('@')) {
+      _showValidationPopup('Email invalide', 'L\'adresse email que tu as entrée n\'est pas valide.');
+      return;
+    }
+    if (password.isEmpty) {
+      _showValidationPopup('Mot de passe manquant', 'Entre ton mot de passe pour te connecter.');
       return;
     }
 
@@ -48,14 +87,20 @@ class _LoginScreenState extends State<LoginScreen> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
       final result = await authProvider.login(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+        email: email,
+        password: password,
       );
 
       if (!mounted) return;
 
       if (result['success']) {
         final user = result['user'];
+
+        // Parent → accès complet à l'app (dashboard accessible via bouton flottant)
+        if (user['role'] == 'PARENT') {
+          Navigator.of(context).pushReplacementNamed('/mood-navigator');
+          return;
+        }
 
         // Vérifier si c'est un professionnel qui doit uploader son diplôme
         if (user['needs_diploma_upload'] == true) {
@@ -72,14 +117,22 @@ class _LoginScreenState extends State<LoginScreen> {
         // Utilisateur normal ou professionnel validé → MoodNavigator
         Navigator.of(context).pushReplacementNamed('/mood-navigator');
       } else {
-        setState(() {
-          _errorMessage = result['error'];
-        });
+        _showValidationPopup(
+          'Connexion impossible',
+          result['error'] ?? 'Email ou mot de passe incorrect.',
+          icon: Icons.error_outline_rounded,
+          iconColor: Colors.red,
+        );
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Une erreur est survenue. Réessaie plus tard.';
-      });
+      if (mounted) {
+        _showValidationPopup(
+          'Erreur',
+          'Une erreur est survenue. Réessaie plus tard.',
+          icon: Icons.error_outline_rounded,
+          iconColor: Colors.red,
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -151,12 +204,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 const SizedBox(height: 48),
-
-                // Message d'erreur
-                if (_errorMessage != null) ...[
-                  ErrorMessage(message: _errorMessage!),
-                  const SizedBox(height: 20),
-                ],
 
                 // Email
                 CustomTextField(

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:provider/provider.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/providers/auth_provider.dart';
+import 'package:sakinah_app/screens/mood/mood_barometer_screen.dart';
 import 'package:sakinah_app/services/api_service.dart';
 import 'package:sakinah_app/widgets/custom_wigdet.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Écran de profil
 /// Affiche différentes options selon l'état de connexion
@@ -121,6 +124,38 @@ class ProfileScreen extends StatelessWidget {
 
             _buildMenuCard(
               context,
+              icon: Icons.mood,
+              title: 'Mon humeur du jour',
+              subtitle: 'Modifier mon humeur à tout moment',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (ctx) => MoodBarometerScreen(
+                      onMoodSelected: (mood) async {
+                        final prefs = await SharedPreferences.getInstance();
+                        final today = DateTime.now().toIso8601String().split(
+                          'T',
+                        )[0];
+                        await prefs.setString('mood_last_date', today);
+                        await prefs.setInt('mood_last_level', mood);
+                        if (ctx.mounted) {
+                          // Recharge MainScreen avec la nouvelle humeur
+                          // (même comportement qu'au démarrage)
+                          Navigator.of(ctx).pushNamedAndRemoveUntil(
+                            '/mood-navigator',
+                            (route) => false,
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            _buildMenuCard(
+              context,
               icon: Icons.history,
               title: 'Mon historique',
               subtitle: 'Humeurs, quiz complétés',
@@ -186,6 +221,42 @@ class ProfileScreen extends StatelessWidget {
               isHighlighted: true,
             ),
 
+            // Évaluer l'application
+            _buildMenuCard(
+              context,
+              icon: Icons.star_outline,
+              title: 'Évaluer l\'application',
+              subtitle: 'Donne ton avis sur l\'App Store',
+              onTap: () async {
+                final inAppReview = InAppReview.instance;
+                if (await inAppReview.isAvailable()) {
+                  await inAppReview.requestReview();
+                } else {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'La notation n\'est pas disponible pour le moment.',
+                        ),
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            // Supprimer le compte (uniquement pour les majeurs)
+            if (user['is_minor'] != true)
+              _buildMenuCard(
+                context,
+                icon: Icons.delete_forever_outlined,
+                title: 'Supprimer mon compte',
+                subtitle: 'Envoyer une demande de suppression',
+                onTap: () => _showDeleteRequestDialog(context),
+              ),
+
             const SizedBox(height: 16),
 
             // Bouton déconnexion
@@ -216,12 +287,9 @@ class ProfileScreen extends StatelessWidget {
                 if (confirm == true) {
                   await authProvider.logout();
                   if (context.mounted) {
-                    // Rester sur l'app mais en mode anonyme
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Déconnexion réussie'),
-                        backgroundColor: AppTheme.success,
-                      ),
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      '/mood-navigator',
+                      (route) => false,
                     );
                   }
                 }
@@ -394,10 +462,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                Text(
-                  '•',
-                  style: TextStyle(color: AppTheme.textSecondary),
-                ),
+                Text('•', style: TextStyle(color: AppTheme.textSecondary)),
                 TextButton(
                   onPressed: () {
                     Navigator.pushNamed(context, '/terms-of-service');
@@ -442,6 +507,48 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _showDeleteRequestDialog(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer mon compte'),
+        content: const Text(
+          'Une demande de suppression sera envoyée à notre équipe. '
+          'Nous vous contacterons sous 48h pour confirmer la suppression conformément au RGPD.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+            child: const Text('Envoyer la demande'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !context.mounted) return;
+
+    final result = await ApiService.sendDeleteRequest();
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result['success'] == true
+              ? result['message'] ?? 'Demande envoyée avec succès'
+              : result['error'] ?? 'Erreur lors de l\'envoi',
+        ),
+        backgroundColor:
+            result['success'] == true ? AppTheme.success : AppTheme.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
   Widget _buildMenuCard(
     BuildContext context, {
     required IconData icon,
@@ -450,7 +557,9 @@ class ProfileScreen extends StatelessWidget {
     required VoidCallback onTap,
     bool isHighlighted = false,
   }) {
-    final Color accentColor = isHighlighted ? AppTheme.primaryColor : AppTheme.primary;
+    final Color accentColor = isHighlighted
+        ? AppTheme.primaryColor
+        : AppTheme.primary;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -488,16 +597,14 @@ class ProfileScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: isHighlighted ? accentColor : AppTheme.textPrimary,
+                          color: isHighlighted
+                              ? accentColor
+                              : AppTheme.textPrimary,
                         ),
                       ),
                       if (isHighlighted) ...[
                         const SizedBox(width: 8),
-                        Icon(
-                          Icons.favorite,
-                          size: 16,
-                          color: accentColor,
-                        ),
+                        Icon(Icons.favorite, size: 16, color: accentColor),
                       ],
                     ],
                   ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sakinah_app/screens/auth/email_verification_screen.dart';
 import 'package:sakinah_app/screens/auth/forgot_password_screen.dart';
 import 'package:sakinah_app/screens/auth/login_screen.dart';
@@ -13,16 +14,20 @@ import 'package:sakinah_app/screens/mood/mood_barometer_screen.dart';
 //import 'package:sakinah_app/screens/mood/mascote_barometer_mascote_screen.dart';
 import 'package:sakinah_app/providers/auth_provider.dart';
 import 'package:sakinah_app/providers/mood_provider.dart';
+import 'package:sakinah_app/providers/testimonials_provider.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/screens/notifications/notifications_screen.dart';
 import 'package:sakinah_app/screens/testimonials/my_testimonial_screen.dart';
 import 'package:sakinah_app/screens/users/admin/admin_moderation_screen.dart';
+import 'package:sakinah_app/screens/users/admin/admin_users_screen.dart';
 import 'package:sakinah_app/screens/users/edit_profile_screen.dart';
 import 'package:sakinah_app/screens/users/history_screen.dart';
 import 'package:sakinah_app/screens/users/about_screen.dart';
 import 'package:sakinah_app/screens/users/support_screen.dart';
 import 'package:sakinah_app/screens/legal/privacy_policy_screen.dart';
 import 'package:sakinah_app/screens/legal/terms_of_service_screen.dart';
+import 'package:sakinah_app/screens/parent/parent_confirmation_screen.dart';
+import 'package:sakinah_app/screens/parent/parent_dashboard_screen.dart';
 import 'package:sakinah_app/services/deep_link_service.dart';
 import 'package:sakinah_app/services/push_notification_service.dart';
 
@@ -85,6 +90,7 @@ class _MyAppState extends State<MyApp> {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => MoodProvider()),
+        ChangeNotifierProvider(create: (_) => TestimonialsProvider()),
       ],
       child: MaterialApp(
         title: 'Sakinah - Bien-être Mental',
@@ -105,12 +111,14 @@ class _MyAppState extends State<MyApp> {
           '/my-testimonials': (context) => const MyTestimonialsScreen(),
           '/notifications': (context) => const NotificationsScreen(),
           '/admin-moderation': (context) => const AdminModerationScreen(),
+          '/admin-users': (context) => const AdminUsersScreen(),
           '/edit-profile': (context) => const EditProfileScreen(),
           '/history': (context) => const HistoryScreen(),
           '/about': (context) => const AboutScreen(),
           '/support': (context) => const SupportScreen(),
           '/privacy-policy': (context) => const PrivacyPolicyScreen(),
           '/terms-of-service': (context) => const TermsOfServiceScreen(),
+          '/parent-dashboard': (context) => const ParentDashboardScreen(),
         },
 
         // Route avec arguments (email-verification)
@@ -119,6 +127,12 @@ class _MyAppState extends State<MyApp> {
             final email = settings.arguments as String;
             return MaterialPageRoute(
               builder: (context) => EmailVerificationScreen(email: email),
+            );
+          }
+          if (settings.name == '/confirm-parental-consent') {
+            final token = settings.arguments as String;
+            return MaterialPageRoute(
+              builder: (context) => ParentConfirmationScreen(token: token),
             );
           }
           return null;
@@ -146,24 +160,84 @@ class AppNavigator extends StatefulWidget {
 class _AppNavigatorState extends State<AppNavigator> {
   int? _selectedMood;
   bool _hasSelectedMood = false;
+  bool _isCheckingMood = true;
 
-  void _onMoodSelected(int mood) {
+  @override
+  void initState() {
+    super.initState();
+    _checkTodayMood();
+  }
+
+  Future<void> _checkTodayMood() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastDate = prefs.getString('mood_last_date') ?? '';
+    final today = DateTime.now().toIso8601String().split('T')[0];
+
+    if (mounted) {
+      if (lastDate == today) {
+        // Humeur déjà sélectionnée aujourd'hui → skip le baromètre
+        setState(() {
+          _selectedMood = prefs.getInt('mood_last_level');
+          _hasSelectedMood = true;
+          _isCheckingMood = false;
+        });
+      } else {
+        setState(() => _isCheckingMood = false);
+      }
+    }
+  }
+
+  Future<void> _onMoodSelected(int mood) async {
+    // Sauvegarder la date et le niveau d'humeur
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().split('T')[0];
+    await prefs.setString('mood_last_date', today);
+    await prefs.setInt('mood_last_level', mood);
+
     setState(() {
       _selectedMood = mood;
       _hasSelectedMood = true;
+    });
+
+    // Afficher un rappel après redirection
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.white, size: 18),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Tu peux modifier ton humeur à tout moment depuis ton profil 💚',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+            duration: const Duration(seconds: 4),
+            backgroundColor: AppTheme.primaryColor,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Si l'humeur n'a pas encore été sélectionnée
-    // Afficher le baromètre d'humeur
+    if (_isCheckingMood) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     if (!_hasSelectedMood) {
       return MoodBarometerScreen(onMoodSelected: _onMoodSelected);
     }
 
-    // Une fois l'humeur sélectionnée
-    // Naviguer vers l'écran principal avec l'humeur initiale
     return MainScreen(initialMood: _selectedMood);
   }
 }

@@ -2,6 +2,7 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const path = require("path");
 const fs = require("fs").promises;
+const { sendEmail } = require("../services/email.service");
 
 class ProfileController {
   /**
@@ -396,6 +397,39 @@ class ProfileController {
       res
         .status(500)
         .json({ error: "Erreur lors de la suppression du compte" });
+    }
+  }
+
+  /**
+   * Envoyer une demande de suppression de compte à l'équipe Sakinah
+   * POST /api/profile/me/delete-request
+   */
+  async sendDeleteRequest(req, res) {
+    try {
+      const user = await User.findByPk(req.user.id);
+
+      const subject = "Demande de suppression de compte - Sakinah";
+      const html = `
+        <h2>Demande de suppression de compte</h2>
+        <p><strong>Utilisateur :</strong> ${user.username} (${user.email})</p>
+        <p><strong>Rôle :</strong> ${user.role}</p>
+        <p><strong>Date :</strong> ${new Date().toLocaleDateString("fr-FR")}</p>
+        <p>Merci de traiter cette demande dans les plus brefs délais conformément au RGPD.</p>
+      `;
+
+      await sendEmail(
+        process.env.SUPPORT_EMAIL || "st.services92@gmail.com",
+        subject,
+        html
+      );
+
+      res.status(200).json({
+        message:
+          "Votre demande de suppression a bien été envoyée. Notre équipe vous contactera sous 48h.",
+      });
+    } catch (error) {
+      console.error("Erreur sendDeleteRequest:", error);
+      res.status(500).json({ error: "Erreur lors de l'envoi de la demande" });
     }
   }
 }

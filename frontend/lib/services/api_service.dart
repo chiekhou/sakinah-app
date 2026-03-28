@@ -390,6 +390,46 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> changePassword({
+    required String token,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/profile/me/password'),
+        headers: _getHeaders(withAuth: true, token: token),
+        body: json.encode({
+          'current_password': currentPassword,
+          'new_password': newPassword,
+        }),
+      );
+      if (response.statusCode == 200) {
+        return {'success': true};
+      }
+      return {'success': false, 'error': _handleError(response)};
+    } catch (e) {
+      return {'success': false, 'error': 'Erreur: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> sendDeleteRequest() async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'error': 'Non connecté'};
+      final response = await http.post(
+        Uri.parse('$baseUrl/profile/me/delete-request'),
+        headers: _getHeaders(withAuth: true, token: token),
+      );
+      if (response.statusCode == 200) {
+        return {'success': true, ...json.decode(response.body)};
+      }
+      return {'success': false, 'error': _handleError(response)};
+    } catch (e) {
+      return {'success': false, 'error': 'Erreur: $e'};
+    }
+  }
+
   // ==================== BAROMÈTRE D'HUMEUR ====================
 
   /// Sauvegarder l'humeur

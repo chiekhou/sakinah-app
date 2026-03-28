@@ -24,8 +24,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  String? _errorMessage;
-  String? _successMessage;
 
   // Rôle sélectionné
   String _selectedRole = 'USER';
@@ -33,8 +31,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Tranche d'âge sélectionnée
   String _selectedAgeRange = '18-25';
 
-  // Consentement parental
-  bool _parentalConsentGiven = false;
   bool _showParentalConsent = false;
 
   // Acceptation des conditions
@@ -98,31 +94,137 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool get _isMinor => ['6-12', '13-17'].contains(_selectedAgeRange);
 
+  void _showValidationPopup(String title, String message, {IconData icon = Icons.warning_amber_rounded, Color iconColor = Colors.orange}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: Icon(icon, color: iconColor, size: 48),
+        title: Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          message,
+          style: TextStyle(fontSize: 14, color: Colors.grey[700], height: 1.5),
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: const Text('Compris', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEmailAlreadyUsedDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: const Icon(Icons.email_outlined, color: Colors.orange, size: 48),
+        title: const Text(
+          'Email déjà utilisé',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          'Cette adresse email est déjà associée à un compte Sakinah. C\'est tout à fait normal si tu t\'es déjà inscrit !\n\nTu peux te connecter directement ou réinitialiser ton mot de passe si tu l\'as oublié.',
+          style: TextStyle(fontSize: 14, color: Colors.grey[700], height: 1.5),
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Navigator.of(context).pushReplacementNamed('/login');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: const Text('Se connecter', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text('Utiliser un autre email', style: TextStyle(color: Colors.grey[600])),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleRegister() async {
-    setState(() {
-      _errorMessage = null;
-      _successMessage = null;
-    });
+    final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
 
-    if (!_formKey.currentState!.validate()) {
+    // Validations manuelles avec popups
+    if (username.isEmpty) {
+      _showValidationPopup('Pseudo manquant', 'Entre ton nom d\'utilisateur.');
       return;
     }
-
-    // Vérifier l'acceptation des conditions
+    if (username.length < 3) {
+      _showValidationPopup('Pseudo trop court', 'Ton nom d\'utilisateur doit contenir au moins 3 caractères.');
+      return;
+    }
+    if (email.isEmpty) {
+      _showValidationPopup('Email manquant', 'Entre ton adresse email.');
+      return;
+    }
+    if (!email.contains('@')) {
+      _showValidationPopup('Email invalide', 'L\'adresse email que tu as entrée n\'est pas valide.');
+      return;
+    }
+    if (_isProfessional && _professionalTitleController.text.trim().isEmpty) {
+      _showValidationPopup('Titre manquant', 'Entre ton titre professionnel.');
+      return;
+    }
+    if (_isMinor && _parentEmailController.text.trim().isEmpty) {
+      _showValidationPopup('Email parent manquant', 'L\'email du parent ou tuteur est requis pour les mineurs.');
+      return;
+    }
+    if (_isMinor && !_parentEmailController.text.trim().contains('@')) {
+      _showValidationPopup('Email parent invalide', 'L\'adresse email du parent n\'est pas valide.');
+      return;
+    }
+    if (password.isEmpty) {
+      _showValidationPopup('Mot de passe manquant', 'Entre un mot de passe.');
+      return;
+    }
+    if (password.length < 8) {
+      _showValidationPopup('Mot de passe trop court', 'Ton mot de passe doit contenir au moins 8 caractères.\n\nActuellement : ${password.length} caractères.');
+      return;
+    }
+    if (confirmPassword.isEmpty) {
+      _showValidationPopup('Confirmation manquante', 'Confirme ton mot de passe.');
+      return;
+    }
+    if (confirmPassword != password) {
+      _showValidationPopup('Mots de passe différents', 'Les deux mots de passe ne correspondent pas.');
+      return;
+    }
     if (!_termsAccepted) {
-      setState(() {
-        _errorMessage =
-            'Tu dois accepter les conditions d\'utilisation et la politique de confidentialité';
-      });
-      return;
-    }
-
-    // Vérifier le consentement parental pour les mineurs
-    if (_isMinor && !_parentalConsentGiven) {
-      setState(() {
-        _errorMessage =
-            'Le consentement parental est requis pour les moins de 18 ans';
-      });
+      _showValidationPopup('Conditions non acceptées', 'Tu dois accepter les conditions d\'utilisation et la politique de confidentialité.');
       return;
     }
 
@@ -132,9 +234,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final result = await ApiService.register(
-        username: _usernameController.text.trim(),
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+        username: username,
+        email: email,
+        password: password,
         ageRange: _selectedAgeRange,
         role: _selectedRole,
         professionalTitle: _isProfessional
@@ -146,27 +248,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
 
       if (result['success']) {
-        setState(() {
-          _successMessage = result['message'];
-        });
-
-        // Attendre 2 secondes puis naviguer vers l'écran de vérification email
-        await Future.delayed(const Duration(seconds: 2));
-        if (!mounted) return;
-
-        Navigator.of(context).pushReplacementNamed(
-          '/email-verification',
-          arguments: _emailController.text.trim(),
-        );
+        if (_isMinor) {
+          // Pour les mineurs : pas de vérification email, attendre le parent
+          _showValidationPopup(
+            'Inscription envoyée !',
+            'Un email a été envoyé à ton parent pour confirmer ton inscription. Tu pourras te connecter une fois qu\'il aura accepté.',
+            icon: Icons.mark_email_read_rounded,
+            iconColor: AppTheme.primaryColor,
+          );
+          await Future.delayed(const Duration(seconds: 2));
+          if (!mounted) return;
+          Navigator.of(context).pushReplacementNamed('/welcome');
+        } else {
+          _showValidationPopup(
+            'Compte créé !',
+            result['message'] ?? 'Vérifie ta boîte email pour activer ton compte.',
+            icon: Icons.check_circle_rounded,
+            iconColor: Colors.green,
+          );
+          await Future.delayed(const Duration(seconds: 2));
+          if (!mounted) return;
+          Navigator.of(context).pushReplacementNamed(
+            '/email-verification',
+            arguments: email,
+          );
+        }
       } else {
-        setState(() {
-          _errorMessage = result['error'];
-        });
+        final errorMsg = (result['error'] ?? '') as String;
+        if (errorMsg.toLowerCase().contains('email') &&
+            (errorMsg.toLowerCase().contains('déjà') ||
+                errorMsg.toLowerCase().contains('already'))) {
+          _showEmailAlreadyUsedDialog();
+        } else {
+          _showValidationPopup(
+            'Inscription impossible',
+            errorMsg.isEmpty ? 'Une erreur est survenue.' : errorMsg,
+            icon: Icons.error_outline_rounded,
+            iconColor: Colors.red,
+          );
+        }
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Une erreur est survenue. Réessaie plus tard.';
-      });
+      if (mounted) {
+        _showValidationPopup(
+          'Erreur',
+          'Une erreur est survenue. Réessaie plus tard.',
+          icon: Icons.error_outline_rounded,
+          iconColor: Colors.red,
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -215,16 +345,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
 
                 const SizedBox(height: 32),
-
-                // Messages
-                if (_successMessage != null) ...[
-                  SuccessMessage(message: _successMessage!),
-                  const SizedBox(height: 20),
-                ],
-                if (_errorMessage != null) ...[
-                  ErrorMessage(message: _errorMessage!),
-                  const SizedBox(height: 20),
-                ],
 
                 // Sélection du rôle
                 Text(
@@ -295,12 +415,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           // Afficher le consentement parental si mineur
                           _showParentalConsent = _isMinor;
                           if (!_isMinor) {
-                            _parentalConsentGiven = false;
                             _parentEmailController.clear();
                           }
                         });
                       },
-                      selectedColor: AppTheme.primary.withOpacity(0.2),
+                      selectedColor: AppTheme.primary.withValues(alpha:0.2),
                       labelStyle: TextStyle(
                         color: isSelected
                             ? AppTheme.primary
@@ -314,91 +433,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
 
                 const SizedBox(height: 16),
-
-                // Consentement parental (si mineur)
-                if (_showParentalConsent) ...[
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.warningLight,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppTheme.warning.withOpacity(0.3),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.family_restroom,
-                              color: AppTheme.warning,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Consentement parental requis',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.warning,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Pour les moins de 18 ans, un parent ou tuteur légal doit donner son consentement.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppTheme.textPrimary,
-                            height: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        CustomTextField(
-                          controller: _parentEmailController,
-                          labelText: 'Email du parent/tuteur',
-                          hintText: 'parent@exemple.com',
-                          prefixIcon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (_isMinor && (value == null || value.isEmpty)) {
-                              return 'Email du parent requis';
-                            }
-                            if (_isMinor && !value!.contains('@')) {
-                              return 'Email invalide';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        CheckboxListTile(
-                          value: _parentalConsentGiven,
-                          onChanged: (value) {
-                            setState(() {
-                              _parentalConsentGiven = value ?? false;
-                            });
-                          },
-                          title: Text(
-                            'En tant que parent/tuteur, j\'autorise mon enfant à utiliser Sakinah',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          contentPadding: EdgeInsets.zero,
-                          controlAffinity: ListTileControlAffinity.leading,
-                          activeColor: AppTheme.primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
 
                 // Titre professionnel (si professionnel)
                 if (_isProfessional) ...[
@@ -471,7 +505,90 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+
+                // Email du parent (si mineur) — à la fin
+                if (_showParentalConsent) ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.warningLight,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppTheme.warning.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.family_restroom,
+                                color: AppTheme.warning, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Consentement parental requis',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.warning,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Pour les moins de 18 ans, un parent ou tuteur légal doit donner son consentement.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.textPrimary,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        CustomTextField(
+                          controller: _parentEmailController,
+                          labelText: 'Email du parent/tuteur',
+                          hintText: 'parent@exemple.com',
+                          prefixIcon: Icons.email_outlined,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) {
+                            if (_isMinor && (value == null || value.isEmpty)) {
+                              return 'Email du parent requis';
+                            }
+                            if (_isMinor && !value!.contains('@')) {
+                              return 'Email invalide';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.info_outline_rounded,
+                                size: 16, color: Colors.orange),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Un email sera envoyé à ton parent pour confirmer ton inscription.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.textSecondary,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                const SizedBox(height: 8),
 
                 // Acceptation des conditions
                 Container(

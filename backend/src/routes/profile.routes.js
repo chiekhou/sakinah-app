@@ -14,6 +14,7 @@ router.get("/me/stats", authenticate, profileController.getMyStats);
 router.put("/me", authenticate, profileController.updateProfile);
 router.put("/me/password", authenticate, profileController.changePassword);
 router.delete("/me", authenticate, profileController.deleteAccount);
+router.post("/me/delete-request", authenticate, profileController.sendDeleteRequest);
 
 // Avatar
 router.post(

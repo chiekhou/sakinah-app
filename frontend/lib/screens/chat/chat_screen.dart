@@ -122,13 +122,21 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A2E),
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: const Color(0xFF1A1A2E),
         elevation: 0,
         automaticallyImplyLeading: false,
         leading: IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.white),
-          onPressed: () async {
+          icon: Icon(
+            Icons.delete_outline,
+            color: _messages.isEmpty
+                ? Colors.white.withValues(alpha: 0.3)
+                : Colors.white,
+          ),
+          onPressed: _messages.isEmpty
+              ? null
+              : () async {
             final messenger = ScaffoldMessenger.of(context);
             final confirm = await showDialog<bool>(
               context: context,
@@ -224,13 +232,16 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _messages.isEmpty ? _buildEmptyState() : _buildMessageList(),
-          ),
-          _buildInputArea(),
-        ],
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Column(
+          children: [
+            Expanded(
+              child: _messages.isEmpty ? _buildEmptyState() : _buildMessageList(),
+            ),
+            _buildInputArea(),
+          ],
+        ),
       ),
     );
   }
@@ -315,6 +326,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildMessageList() {
     return ListView.builder(
       controller: _scrollController,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.all(16),
       itemCount: _messages.length + (_isTyping ? 1 : 0),
       itemBuilder: (context, index) {
@@ -454,7 +466,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildInputArea() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFF2D2D44),
         boxShadow: [
@@ -466,6 +478,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
       child: SafeArea(
+        bottom: true,
         child: Row(
           children: [
             Expanded(

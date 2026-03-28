@@ -3,6 +3,7 @@ import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/models/scenario_model.dart';
 import 'package:sakinah_app/screens/scenarios/scenario_details_screen.dart';
 import 'package:sakinah_app/services/api_service.dart';
+import 'package:sakinah_app/services/progress_service.dart';
 
 class ScenarioListScreen extends StatefulWidget {
   final VoidCallback? onBackPressed;
@@ -19,6 +20,7 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
   bool _isLoading = true;
   String? _selectedTheme;
   List<String> _themes = [];
+  Set<String> _completedScenarioIds = {};
 
   @override
   void initState() {
@@ -30,7 +32,14 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final data = await _apiService.getScenarios();
+      final results = await Future.wait([
+        _apiService.getScenarios(),
+        ProgressService.getCompletedScenarioIds(),
+      ]);
+
+      final data = results[0] as Map<String, dynamic>;
+      final completedIds = results[1] as Set<String>;
+
       final scenarios = (data['scenarios'] as List)
           .map((json) => Scenario.fromJson(json))
           .toList();
@@ -42,6 +51,7 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
         _scenarios = scenarios;
         _filteredScenarios = scenarios;
         _themes = themes;
+        _completedScenarioIds = completedIds;
         _isLoading = false;
       });
     } catch (e) {
@@ -164,20 +174,31 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(label, textAlign: TextAlign.center),
-        selected: isSelected,
-        onSelected: (selected) {
-          _filterByTheme(selected ? theme : null);
-        },
-        backgroundColor: Colors.white,
-        selectedColor: AppTheme.primaryColor,
-        labelStyle: TextStyle(
-          color: isSelected ? Colors.white : AppTheme.textPrimary,
-          fontWeight: FontWeight.w600,
+      child: GestureDetector(
+        onTap: () => _filterByTheme(isSelected ? null : theme),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? AppTheme.primaryColor : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isSelected ? Colors.white : AppTheme.textPrimary,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        showCheckmark: false,
       ),
     );
   }
@@ -245,19 +266,29 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
   }
 
   Widget _buildScenarioCard(Scenario scenario) {
+    final isDone = _completedScenarioIds.contains(scenario.id);
+
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ScenarioDetailScreen(scenarioId: scenario.id),
           ),
         );
+        final ids = await ProgressService.getCompletedScenarioIds();
+        if (mounted) setState(() => _completedScenarioIds = ids);
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDone ? const Color(0xFFF0FFF4) : Colors.white,
           borderRadius: BorderRadius.circular(20),
+          border: isDone
+              ? Border.all(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.4),
+                  width: 1.5,
+                )
+              : null,
           boxShadow: [
             BoxShadow(
               color: AppTheme.primaryColor.withValues(alpha: 0.1),
@@ -287,6 +318,36 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
                       style: const TextStyle(fontSize: 48),
                     ),
                   ),
+                  if (isDone)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check, color: Colors.white, size: 12),
+                            SizedBox(width: 3),
+                            Text(
+                              'Fait',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -320,22 +381,6 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
                         ),
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                          color: AppTheme.primaryColor,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.play_arrow_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
                       ),
                     ),
                   ],

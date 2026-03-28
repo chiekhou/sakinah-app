@@ -37,10 +37,14 @@ class Article {
         return '💪';
       case 'harcelement':
         return '🛡️';
+      case 'famille':
+        return '🏠';
       case 'emotions':
         return '💭';
       case 'sommeil':
         return '😴';
+      case 'sante_mentale':
+        return '🧠';
       case 'conflit':
         return '🤝';
       default:

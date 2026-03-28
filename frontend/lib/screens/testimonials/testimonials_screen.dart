@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/providers/auth_provider.dart';
+import 'package:sakinah_app/providers/testimonials_provider.dart';
 import 'package:sakinah_app/screens/testimonials/create_testimonal_screen.dart';
 import 'package:sakinah_app/screens/testimonials/testimony_details_screen.dart';
-import 'package:sakinah_app/services/testimonial_service.dart';
 import 'package:sakinah_app/utils/auth_helper.dart';
 
 class TestimonialsScreen extends StatefulWidget {
@@ -15,38 +15,21 @@ class TestimonialsScreen extends StatefulWidget {
 }
 
 class _TestimonialsScreenState extends State<TestimonialsScreen> {
-  List<dynamic> _testimonials = [];
-  bool _isLoading = true;
-  String? _errorMessage;
-
   @override
   void initState() {
     super.initState();
-    _loadTestimonials();
+    // Chargement initial via le provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      Provider.of<TestimonialsProvider>(context, listen: false)
+          .loadTestimonials(authProvider.token);
+    });
   }
 
-  Future<void> _loadTestimonials() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final testimonials = await TestimonialService.getAllTestimonials(
-        token: authProvider.token,
-      );
-
-      setState(() {
-        _testimonials = testimonials;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
-    }
+  Future<void> _reload() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    await Provider.of<TestimonialsProvider>(context, listen: false)
+        .loadTestimonials(authProvider.token);
   }
 
   @override
@@ -78,13 +61,12 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
         elevation: 0,
       ),
       body: RefreshIndicator(
-        onRefresh: _loadTestimonials,
+        onRefresh: _reload,
         color: AppTheme.primaryColor,
         child: _buildBody(),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          // Vérifier l'authentification avec AuthHelper
           final canProceed = await AuthHelper.requireAuth(
             context,
             feature: 'partager ton témoignage',
@@ -98,9 +80,8 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
               ),
             );
 
-            // Recharger si un témoignage a été créé
             if (result == true) {
-              _loadTestimonials();
+              _reload();
             }
           }
         },
@@ -115,150 +96,142 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
   }
 
   Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
-        ),
-      );
-    }
+    return Consumer<TestimonialsProvider>(
+      builder: (context, provider, _) {
+        if (provider.isLoading) {
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+            ),
+          );
+        }
 
-    if (_errorMessage != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-            const SizedBox(height: 16),
-            Text(
-              'Erreur de chargement',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[800],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _loadTestimonials,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 12,
+        if (provider.error != null) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                const SizedBox(height: 16),
+                Text(
+                  'Erreur de chargement',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[800],
+                  ),
                 ),
-              ),
-              child: const Text('Réessayer'),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Text(
+                    provider.error!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: _reload,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 12,
+                    ),
+                  ),
+                  child: const Text('Réessayer'),
+                ),
+              ],
             ),
-          ],
-        ),
-      );
-    }
+          );
+        }
 
-    if (_testimonials.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.chat_bubble_outline, size: 80, color: Colors.grey[300]),
-            const SizedBox(height: 24),
-            Text(
-              'Aucun témoignage pour le moment',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
-              ),
+        if (provider.testimonials.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.chat_bubble_outline,
+                  size: 80,
+                  color: Colors.grey[300],
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Aucun témoignage pour le moment',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Sois le premier à partager ton expérience !',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              'Sois le premier à partager ton expérience !',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-            ),
-          ],
-        ),
-      );
-    }
+          );
+        }
 
-    return ListView.builder(
-      padding: const EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 16,
-        bottom: 100, // Espace pour le FAB
-      ),
-      itemCount: _testimonials.length,
-      itemBuilder: (context, index) {
-        final testimony = _testimonials[index];
-        return _TestimonyCard(
-          testimony: testimony,
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    TestimonyDetailScreen(testimonialId: testimony['id']),
-              ),
-            );
-            // Recharger pour mettre à jour les likes/comments
-            _loadTestimonials();
-          },
-          onLikeToggle: () async {
-            final authProvider = Provider.of<AuthProvider>(
-              context,
-              listen: false,
-            );
-
-            // Vérifier l'authentification
-            final canProceed = await AuthHelper.requireAuth(
-              context,
-              feature: 'liker ce témoignage',
-            );
-
-            if (!canProceed) return;
-
-            // Mise à jour optimiste de l'UI
-            final currentHasLiked = testimony['has_liked'] ?? false;
-            final currentLikesCount = testimony['likes_count'] ?? 0;
-
-            setState(() {
-              testimony['has_liked'] = !currentHasLiked;
-              testimony['likes_count'] = currentHasLiked
-                  ? currentLikesCount - 1
-                  : currentLikesCount + 1;
-            });
-
-            try {
-              await TestimonialService.toggleLike(
-                token: authProvider.token!,
-                testimonialId: testimony['id'],
-              );
-              // Pas besoin de recharger - la mise à jour optimiste suffit
-            } catch (e) {
-              // En cas d'erreur, annuler la mise à jour optimiste
-              setState(() {
-                testimony['has_liked'] = currentHasLiked;
-                testimony['likes_count'] = currentLikesCount;
-              });
-
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Erreur: ${e.toString()}'),
-                    backgroundColor: Colors.red,
+        return ListView.builder(
+          padding: const EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: 100,
+          ),
+          itemCount: provider.testimonials.length,
+          itemBuilder: (context, index) {
+            final testimony = provider.testimonials[index];
+            return _TestimonyCard(
+              testimony: testimony,
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TestimonyDetailScreen(
+                      testimonialId: testimony['id'].toString(),
+                    ),
                   ),
                 );
-              }
-            }
+                // Pas besoin de recharger — le provider est déjà synchronisé
+              },
+              onLikeToggle: () async {
+                // Capturer tout avant le premier await
+                final authProvider = Provider.of<AuthProvider>(
+                  context,
+                  listen: false,
+                );
+                final testimonialsProvider = Provider.of<TestimonialsProvider>(
+                  context,
+                  listen: false,
+                );
+                final messenger = ScaffoldMessenger.of(context);
+
+                final canProceed = await AuthHelper.requireAuth(
+                  context,
+                  feature: 'liker ce témoignage',
+                );
+                if (!canProceed) return;
+
+                try {
+                  await testimonialsProvider.toggleLike(
+                    testimony['id'].toString(),
+                    authProvider.token!,
+                  );
+                } catch (e) {
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text('Erreur: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+            );
           },
         );
       },

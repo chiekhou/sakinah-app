@@ -3,6 +3,7 @@ import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/models/quiz_model.dart';
 import 'package:sakinah_app/screens/quiz/quiz_details_screen.dart';
 import 'package:sakinah_app/services/api_service.dart';
+import 'package:sakinah_app/services/progress_service.dart';
 
 class QuizListScreen extends StatefulWidget {
   final VoidCallback? onBackPressed;
@@ -19,6 +20,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
   bool _isLoading = true;
   String? _selectedTheme;
   List<String> _themes = [];
+  Set<String> _completedQuizIds = {};
 
   @override
   void initState() {
@@ -30,12 +32,18 @@ class _QuizListScreenState extends State<QuizListScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final data = await _apiService.getQuizzes();
+      final results = await Future.wait([
+        _apiService.getQuizzes(),
+        ProgressService.getCompletedQuizIds(),
+      ]);
+
+      final data = results[0] as Map<String, dynamic>;
+      final completedIds = results[1] as Set<String>;
+
       final quizzes = (data['quizzes'] as List)
           .map((json) => Quiz.fromJson(json))
           .toList();
 
-      // Extraire les thèmes uniques
       final themes = quizzes.map((q) => q.theme).toSet().toList();
       themes.sort();
 
@@ -43,6 +51,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
         _quizzes = quizzes;
         _filteredQuizzes = quizzes;
         _themes = themes;
+        _completedQuizIds = completedIds;
         _isLoading = false;
       });
     } catch (e) {
@@ -165,25 +174,31 @@ class _QuizListScreenState extends State<QuizListScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(
-          label,
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.visible,
-          softWrap: false,
+      child: GestureDetector(
+        onTap: () => _filterByTheme(isSelected ? null : theme),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? AppTheme.primaryColor : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isSelected ? Colors.white : AppTheme.textPrimary,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
         ),
-        selected: isSelected,
-        onSelected: (selected) {
-          _filterByTheme(selected ? theme : null);
-        },
-        backgroundColor: Colors.white,
-        selectedColor: AppTheme.primaryColor,
-        labelStyle: TextStyle(
-          color: isSelected ? Colors.white : AppTheme.textPrimary,
-          fontWeight: FontWeight.w600,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        showCheckmark: false,
       ),
     );
   }
@@ -245,19 +260,30 @@ class _QuizListScreenState extends State<QuizListScreen> {
   }
 
   Widget _buildQuizCard(Quiz quiz) {
+    final isDone = _completedQuizIds.contains(quiz.id);
+
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => QuizDetailScreen(quizId: quiz.id),
           ),
         );
+        // Rafraîchir les IDs après retour (au cas où quiz vient d'être fait)
+        final ids = await ProgressService.getCompletedQuizIds();
+        if (mounted) setState(() => _completedQuizIds = ids);
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDone ? const Color(0xFFF0FFF4) : Colors.white,
           borderRadius: BorderRadius.circular(16),
+          border: isDone
+              ? Border.all(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.4),
+                  width: 1.5,
+                )
+              : null,
           boxShadow: [
             BoxShadow(
               color: AppTheme.primaryColor.withValues(alpha: 0.1),
@@ -266,97 +292,126 @@ class _QuizListScreenState extends State<QuizListScreen> {
             ),
           ],
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icône thème
-            Container(
-              width: 100,
-              height: 120,
-              decoration: BoxDecoration(
-                gradient: _getThemeGradient(quiz.theme),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
+            // Bandeau coloré pleine largeur
+            Stack(
+              children: [
+                Container(
+                  width: double.infinity,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    gradient: _getThemeGradient(quiz.theme),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      quiz.themeEmoji,
+                      style: const TextStyle(fontSize: 40),
+                    ),
+                  ),
                 ),
-              ),
-              child: Center(
-                child: Text(
-                  quiz.themeEmoji,
-                  style: const TextStyle(fontSize: 48),
-                ),
-              ),
+                if (isDone)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check, color: Colors.white, size: 12),
+                          SizedBox(width: 2),
+                          Text(
+                            'Fait',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
             ),
 
             // Contenu
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Badges difficulté et durée
-                    Row(
-                      children: [
-                        _buildBadge(
-                          quiz.difficultyEmoji,
-                          quiz.difficulty,
-                          AppTheme.accentColor,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Titre
-                    Text(
-                      quiz.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary,
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      _buildBadge(
+                        quiz.difficultyEmoji,
+                        quiz.difficulty,
+                        AppTheme.accentColor,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
 
-                    // Description
-                    Text(
-                      quiz.description,
-                      style: TextStyle(
-                        fontSize: 13,
+                  Text(
+                    quiz.title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+
+                  Text(
+                    quiz.description,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textSecondary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.help_outline_rounded,
+                        size: 16,
                         color: AppTheme.textSecondary,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Nombre de questions
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.help_outline_rounded,
-                          size: 16,
+                      const SizedBox(width: 4),
+                      Text(
+                        '${quiz.questionCount} questions',
+                        style: TextStyle(
+                          fontSize: 12,
                           color: AppTheme.textSecondary,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${quiz.questionCount} questions',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
-                        const Spacer(),
-                        Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 16,
-                          color: AppTheme.primaryColor,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                      const Spacer(),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
@@ -412,10 +467,19 @@ class _QuizListScreenState extends State<QuizListScreen> {
         );
       case 'famille':
         return const LinearGradient(
-          colors: [
-            Color.fromARGB(255, 161, 219, 52),
-            Color.fromARGB(255, 161, 219, 52),
-          ],
+          colors: [Color(0xFF56AB2F), Color(0xFFA8E063)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'sante_mentale':
+        return const LinearGradient(
+          colors: [Color(0xFF11998E), Color(0xFF38EF7D)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'conflit':
+        return const LinearGradient(
+          colors: [Color(0xFFFF6B6B), Color(0xFFFFE66D)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );

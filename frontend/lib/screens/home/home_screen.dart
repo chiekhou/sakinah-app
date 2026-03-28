@@ -281,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ContentCard(
               title: article['title'],
               subtitle: '${article['reading_time_minutes']} min',
-              type: 'article',
+              type: article['title'],
               theme: article['theme'],
               onTap: () {
                 Navigator.push(
@@ -310,15 +310,14 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ContentCard(
               title: quiz['title'],
               subtitle: '${quiz['duration_minutes']} min',
-              type: 'quiz',
+              type: quiz['title'],
               theme: quiz['theme'],
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => QuizDetailScreen(
-                      quizId: quiz['_id'] ?? quiz['id'],
-                    ),
+                    builder: (context) =>
+                        QuizDetailScreen(quizId: quiz['_id'] ?? quiz['id']),
                   ),
                 );
               },
@@ -339,7 +338,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ContentCard(
               title: scenario['title'],
               subtitle: '${scenario['duration_minutes']} min',
-              type: 'scenario',
+              type: scenario['title'],
               theme: scenario['theme'],
               onTap: () {
                 Navigator.push(
