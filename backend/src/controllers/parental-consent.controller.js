@@ -197,12 +197,12 @@ class ParentalConsentController {
     <label for="password">Choisissez votre mot de passe</label>
     <input type="password" id="password" placeholder="Minimum 8 caractères" autocomplete="new-password">
     <p class="hint">8 caractères minimum</p>
-    <button id="btn" onclick="confirm()">✅ Confirmer le consentement</button>
+    <button id="btn" onclick="submitConsent()">✅ Confirmer le consentement</button>
     <div class="msg" id="msg"></div>
     <div class="footer">💚 Sakinah — Ta sérénité, notre priorité</div>
   </div>
   <script>
-    async function confirm() {
+    async function submitConsent() {
       const password = document.getElementById('password').value;
       const btn = document.getElementById('btn');
       const msg = document.getElementById('msg');
