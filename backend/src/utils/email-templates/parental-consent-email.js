@@ -306,7 +306,7 @@ function getParentalConsentEmail(data) {
 
       <p class="message">
         <strong>Des questions ?</strong> Notre équipe est là pour vous aider. 
-        Contactez-nous à <a href="mailto:support@sakinah.app" style="color: #2ECC71; text-decoration: none; font-weight: 600;">support@sakinah.app</a>
+        Contactez-nous à <a href="mailto:st-services@chiekhoutraore.fr" style="color: #2ECC71; text-decoration: none; font-weight: 600;">st-services@chiekhoutraore.fr</a>
       </p>
 
       <!-- Warning -->
