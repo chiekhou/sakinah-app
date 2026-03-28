@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/models/article_model.dart';
 import 'package:sakinah_app/services/api_service.dart';
+import 'package:sakinah_app/services/progress_service.dart';
 import 'package:sakinah_app/widgets/description_card.dart';
 
 class ArticleDetailScreen extends StatefulWidget {
@@ -30,6 +31,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
   Future<void> _loadArticle() async {
     try {
       final data = await _apiService.getArticle(widget.articleId);
+      await ProgressService.markArticleRead(widget.articleId);
       setState(() {
         _article = ArticleDetail.fromJson(data);
         _isLoading = false;

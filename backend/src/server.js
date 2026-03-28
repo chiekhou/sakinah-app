@@ -79,6 +79,7 @@ const contentRoutes = require("./routes/content.routes");
 const chatRoutes = require("./routes/chat.routes");
 const emergencyRoutes = require("./routes/emergency.routes");
 const parentalConsentRoutes = require("./routes/parental-consent.routes");
+const parentRoutes = require("./routes/parent.routes");
 const testimonialRoutes = require("./routes/testimonial.routes");
 const notificationRoutes = require("./routes/notification.routes");
 
@@ -87,6 +88,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminModerationRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/auth", parentalConsentRoutes);
+app.use("/api/parent", parentRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/mood", moodRoutes);
 app.use("/api/quizzes", quizRoutes);

@@ -3,6 +3,7 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:sakinah_app/services/api_service.dart';
 import 'package:sakinah_app/screens/auth/reset_password_screen.dart';
+import 'package:sakinah_app/screens/parent/parent_confirmation_screen.dart';
 
 /// Service pour gérer les deep links (vérification email, reset password, etc.)
 class DeepLinkService {
@@ -116,6 +117,7 @@ class DeepLinkService {
         break;
 
       case 'parental-consent':
+      case 'confirm-parental-consent':
         if (token != null && token.isNotEmpty) {
           await _handleParentalConsent(token);
         } else {
@@ -190,11 +192,29 @@ class DeepLinkService {
     }
   }
 
-  /// Gérer le consentement parental
+  /// Naviguer vers la page de confirmation du consentement parental
   Future<void> _handleParentalConsent(String token) async {
-    // PRODUCTION: Log sensible désactivé (expose token)
-    // debugPrint('🔗 Consentement parental avec token: $token');
-    _showMessage('Consentement parental en cours de traitement...', isSuccess: true);
+    hasNavigated = true;
+
+    NavigatorState? navigator = navigatorKey.currentState;
+    int attempts = 0;
+    while (navigator == null && attempts < 50) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      navigator = navigatorKey.currentState;
+      attempts++;
+    }
+
+    if (navigator != null) {
+      navigator.pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => ParentConfirmationScreen(token: token),
+        ),
+        (route) => false,
+      );
+    } else {
+      hasNavigated = false;
+      _showMessage('Erreur de navigation', isSuccess: false);
+    }
   }
 
   /// Afficher un message de succès et naviguer après que l'utilisateur appuie sur OK

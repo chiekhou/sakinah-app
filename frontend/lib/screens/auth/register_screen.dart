@@ -31,8 +31,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Tranche d'âge sélectionnée
   String _selectedAgeRange = '18-25';
 
-  // Consentement parental
-  bool _parentalConsentGiven = false;
   bool _showParentalConsent = false;
 
   // Acceptation des conditions
@@ -229,10 +227,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _showValidationPopup('Conditions non acceptées', 'Tu dois accepter les conditions d\'utilisation et la politique de confidentialité.');
       return;
     }
-    if (_isMinor && !_parentalConsentGiven) {
-      _showValidationPopup('Consentement parental requis', 'Le consentement d\'un parent ou tuteur est obligatoire pour les moins de 18 ans.');
-      return;
-    }
 
     setState(() {
       _isLoading = true;
@@ -254,21 +248,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
 
       if (result['success']) {
-        _showValidationPopup(
-          'Compte créé !',
-          result['message'] ?? 'Vérifie ta boîte email pour activer ton compte.',
-          icon: Icons.check_circle_rounded,
-          iconColor: Colors.green,
-        );
-
-        // Attendre 2 secondes puis naviguer vers l'écran de vérification email
-        await Future.delayed(const Duration(seconds: 2));
-        if (!mounted) return;
-
-        Navigator.of(context).pushReplacementNamed(
-          '/email-verification',
-          arguments: email,
-        );
+        if (_isMinor) {
+          // Pour les mineurs : pas de vérification email, attendre le parent
+          _showValidationPopup(
+            'Inscription envoyée !',
+            'Un email a été envoyé à ton parent pour confirmer ton inscription. Tu pourras te connecter une fois qu\'il aura accepté.',
+            icon: Icons.mark_email_read_rounded,
+            iconColor: AppTheme.primaryColor,
+          );
+          await Future.delayed(const Duration(seconds: 2));
+          if (!mounted) return;
+          Navigator.of(context).pushReplacementNamed('/welcome');
+        } else {
+          _showValidationPopup(
+            'Compte créé !',
+            result['message'] ?? 'Vérifie ta boîte email pour activer ton compte.',
+            icon: Icons.check_circle_rounded,
+            iconColor: Colors.green,
+          );
+          await Future.delayed(const Duration(seconds: 2));
+          if (!mounted) return;
+          Navigator.of(context).pushReplacementNamed(
+            '/email-verification',
+            arguments: email,
+          );
+        }
       } else {
         final errorMsg = (result['error'] ?? '') as String;
         if (errorMsg.toLowerCase().contains('email') &&
@@ -411,12 +415,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           // Afficher le consentement parental si mineur
                           _showParentalConsent = _isMinor;
                           if (!_isMinor) {
-                            _parentalConsentGiven = false;
                             _parentEmailController.clear();
                           }
                         });
                       },
-                      selectedColor: AppTheme.primary.withOpacity(0.2),
+                      selectedColor: AppTheme.primary.withValues(alpha:0.2),
                       labelStyle: TextStyle(
                         color: isSelected
                             ? AppTheme.primary
@@ -430,91 +433,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
 
                 const SizedBox(height: 16),
-
-                // Consentement parental (si mineur)
-                if (_showParentalConsent) ...[
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.warningLight,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppTheme.warning.withOpacity(0.3),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.family_restroom,
-                              color: AppTheme.warning,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Consentement parental requis',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.warning,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Pour les moins de 18 ans, un parent ou tuteur légal doit donner son consentement.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppTheme.textPrimary,
-                            height: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        CustomTextField(
-                          controller: _parentEmailController,
-                          labelText: 'Email du parent/tuteur',
-                          hintText: 'parent@exemple.com',
-                          prefixIcon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (_isMinor && (value == null || value.isEmpty)) {
-                              return 'Email du parent requis';
-                            }
-                            if (_isMinor && !value!.contains('@')) {
-                              return 'Email invalide';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        CheckboxListTile(
-                          value: _parentalConsentGiven,
-                          onChanged: (value) {
-                            setState(() {
-                              _parentalConsentGiven = value ?? false;
-                            });
-                          },
-                          title: Text(
-                            'En tant que parent/tuteur, j\'autorise mon enfant à utiliser Sakinah',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          contentPadding: EdgeInsets.zero,
-                          controlAffinity: ListTileControlAffinity.leading,
-                          activeColor: AppTheme.primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
 
                 // Titre professionnel (si professionnel)
                 if (_isProfessional) ...[
@@ -587,7 +505,90 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+
+                // Email du parent (si mineur) — à la fin
+                if (_showParentalConsent) ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.warningLight,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppTheme.warning.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.family_restroom,
+                                color: AppTheme.warning, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Consentement parental requis',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.warning,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Pour les moins de 18 ans, un parent ou tuteur légal doit donner son consentement.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.textPrimary,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        CustomTextField(
+                          controller: _parentEmailController,
+                          labelText: 'Email du parent/tuteur',
+                          hintText: 'parent@exemple.com',
+                          prefixIcon: Icons.email_outlined,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) {
+                            if (_isMinor && (value == null || value.isEmpty)) {
+                              return 'Email du parent requis';
+                            }
+                            if (_isMinor && !value!.contains('@')) {
+                              return 'Email invalide';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.info_outline_rounded,
+                                size: 16, color: Colors.orange),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Un email sera envoyé à ton parent pour confirmer ton inscription.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.textSecondary,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                const SizedBox(height: 8),
 
                 // Acceptation des conditions
                 Container(

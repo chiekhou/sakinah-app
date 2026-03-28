@@ -9,8 +9,14 @@
  * @returns {Object} - Subject et HTML de l'email
  */
 function getParentalConsentEmail(data) {
-  const { parentEmail, childUsername, childEmail, ageRange, confirmationLink } =
-    data;
+  const {
+    parentEmail,
+    childUsername,
+    childEmail,
+    ageRange,
+    confirmationLink,
+    revocationLink,
+  } = data;
 
   const subject = "🔒 Confirmation du consentement parental - Sakinah";
 
@@ -99,13 +105,29 @@ function getParentalConsentEmail(data) {
       border-radius: 12px;
       font-weight: 600;
       font-size: 16px;
-      margin: 30px 0;
+      margin: 10px 8px;
       box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
       transition: transform 0.2s;
     }
     .cta-button:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(46, 204, 113, 0.4);
+    }
+    .revoke-button {
+      display: inline-block;
+      background: #ffffff;
+      color: #E74C3C;
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 15px;
+      margin: 10px 8px;
+      border: 2px solid #E74C3C;
+      transition: transform 0.2s;
+    }
+    .revoke-button:hover {
+      background: #FDEDEC;
     }
     .about-sakinah {
       background-color: #EBF5FB;
@@ -215,7 +237,7 @@ function getParentalConsentEmail(data) {
             year: "numeric",
             month: "long",
             day: "numeric",
-          }
+          },
         )}</div>
       </div>
 
@@ -225,15 +247,18 @@ function getParentalConsentEmail(data) {
         l'inscription des utilisateurs de moins de 18 ans.
       </p>
 
-      <!-- Bouton de confirmation -->
+      <!-- Boutons de confirmation et révocation -->
       <center>
         <a href="${confirmationLink}" class="cta-button">
-          ✅ Confirmer mon consentement
+          ✅ Confirmer le consentement
+        </a>
+        <a href="${revocationLink}" class="revoke-button">
+          ❌ Refuser le consentement
         </a>
       </center>
 
       <p class="message" style="font-size: 13px; color: #95A5A6;">
-        <em>Ce lien est valide pendant 7 jours. Après cette période, votre enfant devra se réinscrire.</em>
+        <em>Ces liens sont valides pendant 7 jours. Après cette période, votre enfant devra se réinscrire.</em>
       </p>
 
       <!-- À propos de Sakinah -->
@@ -296,7 +321,7 @@ function getParentalConsentEmail(data) {
       <p><strong>💚 Sakinah</strong></p>
       <p>Ta sérénité, notre priorité</p>
       <p style="margin-top: 15px;">
-        <a href="mailto:support@sakinah.app">Support</a> • 
+        <a href="mailto:st-services@chiekhoutraore.fr">Support</a> • 
         <a href="#">Politique de confidentialité</a> • 
         <a href="#">CGU</a>
       </p>

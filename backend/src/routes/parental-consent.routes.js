@@ -15,20 +15,40 @@ router.post(
 
 /**
  * @route   GET /api/auth/confirm-parental-consent/:token
- * @desc    Confirmer le consentement parental via le lien dans l'email
+ * @desc    Vérifier le token et retourner les infos de l'enfant (pré-remplissage)
  * @access  Public
- * @params  token - Token de confirmation
  */
 router.get(
+  "/confirm-parental-consent/:token",
+  parentalConsentController.getConsentInfo
+);
+
+/**
+ * @route   POST /api/auth/confirm-parental-consent/:token
+ * @desc    Confirmer le consentement + créer le compte parent
+ * @access  Public
+ * @body    { password: string }
+ */
+router.post(
   "/confirm-parental-consent/:token",
   parentalConsentController.confirmConsent
 );
 
 /**
+ * @route   GET /api/auth/revoke-parental-consent/:token
+ * @desc    Révoquer le consentement via le lien dans l'email
+ * @access  Public
+ */
+router.get(
+  "/revoke-parental-consent/:token",
+  parentalConsentController.revokeConsentByToken
+);
+
+/**
  * @route   POST /api/auth/revoke-parental-consent
- * @desc    Révoquer le consentement parental
- * @access  Public (mais vérifié par email parent)
- * @body    { user_id: number, parent_email: string, reason?: string }
+ * @desc    Révoquer le consentement parental (depuis le dashboard parent)
+ * @access  Public
+ * @body    { user_id: string, parent_email: string, reason?: string }
  */
 router.post(
   "/revoke-parental-consent",

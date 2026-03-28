@@ -47,13 +47,20 @@ const User = sequelize.define(
         "EDUCATEUR",
         "PSYCHOLOGUE",
         "INTERVENANT",
-        "ADMIN"
+        "ADMIN",
+        "PARENT"
       ),
       allowNull: false,
       defaultValue: "USER",
     },
     status: {
-      type: DataTypes.ENUM("PENDING", "ACTIVE", "SUSPENDED", "REJECTED"),
+      type: DataTypes.ENUM(
+        "PENDING",
+        "ACTIVE",
+        "SUSPENDED",
+        "REJECTED",
+        "PENDING_PARENTAL_CONSENT"
+      ),
       allowNull: false,
       defaultValue: "PENDING",
     },

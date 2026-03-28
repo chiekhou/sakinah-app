@@ -247,6 +247,18 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
+            // Supprimer le compte (uniquement pour les majeurs)
+            if (user['is_minor'] != true)
+              _buildMenuCard(
+                context,
+                icon: Icons.delete_forever_outlined,
+                title: 'Supprimer mon compte',
+                subtitle: 'Envoyer une demande de suppression',
+                onTap: () => _showDeleteRequestDialog(context),
+              ),
+
+            const SizedBox(height: 16),
+
             // Bouton déconnexion
             SecondaryButton(
               text: 'Se déconnecter',
@@ -491,6 +503,48 @@ class ProfileScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _showDeleteRequestDialog(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer mon compte'),
+        content: const Text(
+          'Une demande de suppression sera envoyée à notre équipe. '
+          'Nous vous contacterons sous 48h pour confirmer la suppression conformément au RGPD.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+            child: const Text('Envoyer la demande'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !context.mounted) return;
+
+    final result = await ApiService.sendDeleteRequest();
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result['success'] == true
+              ? result['message'] ?? 'Demande envoyée avec succès'
+              : result['error'] ?? 'Erreur lors de l\'envoi',
+        ),
+        backgroundColor:
+            result['success'] == true ? AppTheme.success : AppTheme.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

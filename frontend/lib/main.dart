@@ -19,12 +19,15 @@ import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/screens/notifications/notifications_screen.dart';
 import 'package:sakinah_app/screens/testimonials/my_testimonial_screen.dart';
 import 'package:sakinah_app/screens/users/admin/admin_moderation_screen.dart';
+import 'package:sakinah_app/screens/users/admin/admin_users_screen.dart';
 import 'package:sakinah_app/screens/users/edit_profile_screen.dart';
 import 'package:sakinah_app/screens/users/history_screen.dart';
 import 'package:sakinah_app/screens/users/about_screen.dart';
 import 'package:sakinah_app/screens/users/support_screen.dart';
 import 'package:sakinah_app/screens/legal/privacy_policy_screen.dart';
 import 'package:sakinah_app/screens/legal/terms_of_service_screen.dart';
+import 'package:sakinah_app/screens/parent/parent_confirmation_screen.dart';
+import 'package:sakinah_app/screens/parent/parent_dashboard_screen.dart';
 import 'package:sakinah_app/services/deep_link_service.dart';
 import 'package:sakinah_app/services/push_notification_service.dart';
 
@@ -108,12 +111,14 @@ class _MyAppState extends State<MyApp> {
           '/my-testimonials': (context) => const MyTestimonialsScreen(),
           '/notifications': (context) => const NotificationsScreen(),
           '/admin-moderation': (context) => const AdminModerationScreen(),
+          '/admin-users': (context) => const AdminUsersScreen(),
           '/edit-profile': (context) => const EditProfileScreen(),
           '/history': (context) => const HistoryScreen(),
           '/about': (context) => const AboutScreen(),
           '/support': (context) => const SupportScreen(),
           '/privacy-policy': (context) => const PrivacyPolicyScreen(),
           '/terms-of-service': (context) => const TermsOfServiceScreen(),
+          '/parent-dashboard': (context) => const ParentDashboardScreen(),
         },
 
         // Route avec arguments (email-verification)
@@ -122,6 +127,12 @@ class _MyAppState extends State<MyApp> {
             final email = settings.arguments as String;
             return MaterialPageRoute(
               builder: (context) => EmailVerificationScreen(email: email),
+            );
+          }
+          if (settings.name == '/confirm-parental-consent') {
+            final token = settings.arguments as String;
+            return MaterialPageRoute(
+              builder: (context) => ParentConfirmationScreen(token: token),
             );
           }
           return null;

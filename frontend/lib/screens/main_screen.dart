@@ -12,6 +12,7 @@ import 'package:sakinah_app/screens/users/profile_screen.dart';
 import 'package:sakinah_app/services/notification_service.dart';
 import 'package:sakinah_app/widgets/floating.button_admin.dart';
 import 'package:sakinah_app/widgets/floating_button_notification.dart';
+import 'package:sakinah_app/widgets/floating_button_parent.dart';
 import 'package:sakinah_app/screens/notifications/notifications_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -60,11 +61,84 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
+  void _showAdminMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Espace Admin',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.gavel_rounded, color: Colors.orange),
+              ),
+              title: const Text('Modération',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: const Text('Témoignages & commentaires en attente'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.pushNamed(context, '/admin-moderation');
+              },
+            ),
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.manage_accounts_rounded,
+                    color: Colors.blue),
+              ),
+              title: const Text('Gestion des utilisateurs',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: const Text(
+                  'Activer, suspendre, supprimer, valider des pros'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.pushNamed(context, '/admin-users');
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final isConnected = authProvider.isAuthenticated;
     final isAdmin = authProvider.currentUser?['role'] == 'ADMIN';
+    final isParent = authProvider.currentUser?['role'] == 'PARENT';
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -106,8 +180,14 @@ class _MainScreenState extends State<MainScreen> {
             // Bouton Admin (si admin)
             if (isAdmin)
               FloatingAdminButton(
+                onTap: () => _showAdminMenu(context),
+              ),
+
+            // Bouton Espace Parent (si parent)
+            if (isParent)
+              FloatingParentButton(
                 onTap: () {
-                  Navigator.pushNamed(context, '/admin-moderation');
+                  Navigator.pushNamed(context, '/parent-dashboard');
                 },
               ),
           ],

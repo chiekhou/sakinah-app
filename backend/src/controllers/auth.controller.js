@@ -174,10 +174,10 @@ class AuthController {
             parent_email
           );
 
-          // Générer le lien de confirmation
-          const confirmationLink = `${
-            process.env.FRONTEND_URL || "http://localhost:3001"
-          }/confirm-parental-consent/${consent.consent_token}`;
+          // Générer les liens de confirmation et révocation
+          const baseUrl = process.env.FRONTEND_URL || "http://localhost:3001";
+          const confirmationLink = `${baseUrl}/confirm-parental-consent/${consent.consent_token}`;
+          const revocationLink = `${process.env.API_URL || "http://localhost:3000"}/api/auth/revoke-parental-consent/${consent.consent_token}`;
 
           // Préparer l'email pour le parent
           const emailData = {
@@ -185,7 +185,8 @@ class AuthController {
             childUsername: user.username,
             childEmail: user.email,
             ageRange: user.age_range,
-            confirmationLink: confirmationLink,
+            confirmationLink,
+            revocationLink,
           };
 
           const { subject, html } = getParentalConsentEmail(emailData);
@@ -206,13 +207,14 @@ class AuthController {
         }
       }
 
-      // Envoyer l'email de vérification à l'utilisateur
-      // (même pour les mineurs, pour qu'ils vérifient leur email)
-      try {
-        await sendVerificationEmail(email, email_verification_token);
-      } catch (emailError) {
-        console.error("Erreur envoi email:", emailError);
-        // On continue même si l'email échoue
+      // Envoyer l'email de vérification uniquement pour les majeurs
+      // (pour les mineurs, le consentement du parent active le compte)
+      if (!isMinorUser) {
+        try {
+          await sendVerificationEmail(email, email_verification_token);
+        } catch (emailError) {
+          console.error("Erreur envoi email:", emailError);
+        }
       }
 
       // Préparer le message de réponse

@@ -96,6 +96,12 @@ class _LoginScreenState extends State<LoginScreen> {
       if (result['success']) {
         final user = result['user'];
 
+        // Parent → accès complet à l'app (dashboard accessible via bouton flottant)
+        if (user['role'] == 'PARENT') {
+          Navigator.of(context).pushReplacementNamed('/mood-navigator');
+          return;
+        }
+
         // Vérifier si c'est un professionnel qui doit uploader son diplôme
         if (user['needs_diploma_upload'] == true) {
           Navigator.of(context).pushReplacementNamed('/upload-diploma');
