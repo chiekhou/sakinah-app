@@ -15,7 +15,6 @@ function getParentalConsentEmail(data) {
     childEmail,
     ageRange,
     confirmationLink,
-    revocationLink,
   } = data;
 
   const subject = "🔒 Confirmation du consentement parental - Sakinah";
@@ -247,13 +246,10 @@ function getParentalConsentEmail(data) {
         l'inscription des utilisateurs de moins de 18 ans.
       </p>
 
-      <!-- Boutons de confirmation et révocation -->
+      <!-- Bouton de confirmation -->
       <center>
         <a href="${confirmationLink}" class="cta-button">
           ✅ Confirmer le consentement
-        </a>
-        <a href="${revocationLink}" class="revoke-button">
-          ❌ Refuser le consentement
         </a>
       </center>
 

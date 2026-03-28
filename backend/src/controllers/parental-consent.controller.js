@@ -77,10 +77,9 @@ class ParentalConsentController {
         consent = await ParentalConsent.createConsent(user_id, parent_email);
       }
 
-      // Générer les liens de confirmation et révocation
+      // Générer le lien de confirmation
       const apiUrl = process.env.API_URL || "http://localhost:3000";
       const confirmationLink = `${apiUrl}/api/auth/confirm-parental-consent/${consent.consent_token}`;
-      const revocationLink = `${apiUrl}/api/auth/revoke-parental-consent/${consent.consent_token}`;
 
       // Préparer l'email
       const emailData = {
@@ -89,7 +88,6 @@ class ParentalConsentController {
         childEmail: user.email,
         ageRange: user.age_range,
         confirmationLink,
-        revocationLink,
       };
 
       const { subject, html } = getParentalConsentEmail(emailData);
