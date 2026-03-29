@@ -40,6 +40,9 @@ class TestimonialController {
         status: "PENDING",
       });
 
+      // Notifier les admins
+      pushService.notifyAdminNewTestimonial(testimonial.id).catch(() => {});
+
       res.status(201).json({
         message:
           "Témoignage créé avec succès ! Il sera visible après modération.",

@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/providers/auth_provider.dart';
+import 'package:sakinah_app/screens/parent/parent_confirmation_screen.dart';
 import 'package:sakinah_app/services/deep_link_service.dart';
 
 /// Écran de splash - Premier écran affiché au lancement
@@ -54,9 +55,23 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _initializeAndNavigate() async {
     // Attendre que l'animation soit terminée
-    await Future.delayed(const Duration(milliseconds: 5000));
+    await Future.delayed(const Duration(milliseconds: 6000));
 
     if (!mounted) return;
+
+    // Si un token de consentement est en attente, naviguer directement
+    if (DeepLinkService.pendingConsentToken != null) {
+      final token = DeepLinkService.pendingConsentToken!;
+      DeepLinkService.pendingConsentToken = null;
+      DeepLinkService.hasNavigated = true;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => ParentConfirmationScreen(token: token),
+        ),
+        (route) => false,
+      );
+      return;
+    }
 
     // Si un deep link a déjà navigué, ne pas écraser
     if (DeepLinkService.hasNavigated) {

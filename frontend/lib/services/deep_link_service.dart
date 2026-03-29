@@ -3,7 +3,6 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:sakinah_app/services/api_service.dart';
 import 'package:sakinah_app/screens/auth/reset_password_screen.dart';
-import 'package:sakinah_app/screens/parent/parent_confirmation_screen.dart';
 
 /// Service pour gérer les deep links (vérification email, reset password, etc.)
 class DeepLinkService {
@@ -19,6 +18,9 @@ class DeepLinkService {
 
   /// Indique qu'un deep link a navigué avec succès
   static bool hasNavigated = false;
+
+  /// Token de consentement parental en attente (si navigation pas encore prête)
+  static String? pendingConsentToken;
 
   /// Initialiser le service de deep links
   Future<void> init() async {
@@ -170,7 +172,7 @@ class DeepLinkService {
     // Attendre que le navigator soit prêt (cold start)
     NavigatorState? navigator = navigatorKey.currentState;
     int attempts = 0;
-    while (navigator == null && attempts < 50) {
+    while (navigator == null && attempts < 100) { // 10s pour iOS cold start
       debugPrint('🔗 Navigator pas encore prêt, attente... (tentative ${attempts + 1})');
       await Future.delayed(const Duration(milliseconds: 100));
       navigator = navigatorKey.currentState;
@@ -192,29 +194,12 @@ class DeepLinkService {
     }
   }
 
-  /// Naviguer vers la page de confirmation du consentement parental
+  /// Stocker le token de consentement parental — le splash screen navigue
   Future<void> _handleParentalConsent(String token) async {
     hasNavigated = true;
-
-    NavigatorState? navigator = navigatorKey.currentState;
-    int attempts = 0;
-    while (navigator == null && attempts < 50) {
-      await Future.delayed(const Duration(milliseconds: 100));
-      navigator = navigatorKey.currentState;
-      attempts++;
-    }
-
-    if (navigator != null) {
-      navigator.pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (context) => ParentConfirmationScreen(token: token),
-        ),
-        (route) => false,
-      );
-    } else {
-      hasNavigated = false;
-      _showMessage('Erreur de navigation', isSuccess: false);
-    }
+    pendingConsentToken = token;
+    // Ne pas naviguer ici : le contexte du navigator n'est pas fiable au cold start
+    // Le splash screen prend le relais avec son propre contexte
   }
 
   /// Afficher un message de succès et naviguer après que l'utilisateur appuie sur OK

@@ -41,16 +41,27 @@ class _ParentConfirmationScreenState extends State<ParentConfirmationScreen> {
   }
 
   Future<void> _loadConsentInfo() async {
-    final result = await ParentApiService.getConsentInfo(widget.token);
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        if (result['success'] == true) {
-          _consentInfo = result;
-        } else {
-          _error = result['error'];
-        }
-      });
+    try {
+      final result = await ParentApiService.getConsentInfo(widget.token)
+          .timeout(const Duration(seconds: 15));
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          if (result['success'] == true) {
+            _consentInfo = result;
+          } else {
+            _error = result['error'] ?? 'Lien invalide ou expiré';
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('❌ ParentConfirmationScreen erreur: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _error = 'Impossible de contacter le serveur. Vérifiez votre connexion.';
+        });
+      }
     }
   }
 
@@ -80,13 +91,13 @@ class _ParentConfirmationScreenState extends State<ParentConfirmationScreen> {
 
     if (result['success'] == true) {
       await _showDialog(
-        'Consentement confirmé !',
-        'Votre compte parent a été créé. Vous allez accéder à votre espace.',
+        '🎉 Compte créé avec succès !',
+        'Votre compte parent a bien été créé. Vous pouvez maintenant vous connecter avec votre email et votre mot de passe.',
         isSuccess: true,
       );
       if (mounted) {
         Navigator.of(context).pushNamedAndRemoveUntil(
-          '/parent-dashboard',
+          '/login',
           (route) => false,
         );
       }
@@ -140,7 +151,14 @@ class _ParentConfirmationScreenState extends State<ParentConfirmationScreen> {
       backgroundColor: AppTheme.backgroundColor,
       body: SafeArea(
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? Center(child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(ParentApiService.baseUrl, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                ],
+              ))
             : _error != null
                 ? _buildErrorState()
                 : _buildConfirmationForm(),

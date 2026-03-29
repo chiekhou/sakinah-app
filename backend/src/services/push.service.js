@@ -3,6 +3,7 @@
 
 const cron = require("node-cron");
 const FCMToken = require("../models/FCMToken");
+const User = require("../models/User");
 
 // Firebase Admin SDK - chargé dynamiquement
 let admin = null;
@@ -271,6 +272,30 @@ async function notifyCommentRejected(userId, commentId, reason) {
 }
 
 /**
+ * Notification: Nouveau témoignage en attente de modération (admins)
+ */
+async function notifyAdminNewTestimonial(testimonialId) {
+  try {
+    const admins = await User.findAll({ where: { role: "ADMIN", status: "ACTIVE" } });
+    const adminIds = admins.map((a) => a.id);
+    if (adminIds.length === 0) return;
+    return sendToUsers(
+      adminIds,
+      {
+        title: "📝 Nouveau témoignage",
+        body: "Un nouveau témoignage est en attente de modération.",
+      },
+      {
+        type: "NEW_TESTIMONIAL_PENDING",
+        testimonial_id: testimonialId,
+      },
+    );
+  } catch (e) {
+    console.error("notifyAdminNewTestimonial error:", e);
+  }
+}
+
+/**
  * Rappel quotidien (appelé par un cron job)
  */
 async function sendDailyReminder() {
@@ -351,6 +376,7 @@ module.exports = {
   notifyTestimonialCommented,
   notifyCommentApproved,
   notifyCommentRejected,
+  notifyAdminNewTestimonial,
   sendDailyReminder,
   startDailyReminderCron,
 };
