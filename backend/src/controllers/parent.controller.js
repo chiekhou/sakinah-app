@@ -31,7 +31,7 @@ class ParentController {
       });
 
       if (!children.length) {
-        return res.status(404).json({ error: "Aucun enfant lié à ce compte" });
+        return res.status(200).json({ children: [] });
       }
 
       // Récupérer le consentement de chaque enfant

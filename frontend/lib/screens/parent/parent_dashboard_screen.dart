@@ -580,12 +580,12 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           ),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: _loadChildren,
+            onPressed: _showAddChildForm,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor,
             ),
             child: const Text(
-              'Réessayer',
+              'Ajouter un enfant',
               style: TextStyle(color: Colors.white),
             ),
           ),
