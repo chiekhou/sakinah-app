@@ -130,15 +130,7 @@ class ParentController {
         return res.status(404).json({ error: "Aucun enfant lié à ce compte" });
       }
 
-      // Révoquer le consentement si actif (enfant inscrit via email parental)
-      // Si pas de consentement actif (ajout direct dashboard), on ignore
-      try {
-        await ParentalConsent.revokeConsent(child.id, "Suppression par le parent");
-      } catch (e) {
-        // Pas de consentement actif — enfant ajouté directement, on continue
-      }
-
-      // Supprimer les données liées avant de supprimer l'utilisateur
+      // Supprimer toutes les données liées avant de supprimer l'utilisateur
       // (évite les erreurs de contrainte de clé étrangère)
       const childId = child.id;
       await FCMToken.destroy({ where: { user_id: childId } });
@@ -154,6 +146,9 @@ class ParentController {
       await TestimonialLike.destroy({ where: { user_id: childId } });
       await TestimonialComment.destroy({ where: { user_id: childId } });
       await Testimonial.destroy({ where: { user_id: childId } });
+
+      // Supprimer les consentements parentaux (toutes entrées, actives ou non)
+      await ParentalConsent.destroy({ where: { user_id: childId } });
 
       await child.destroy();
 
