@@ -67,6 +67,106 @@ app.get("/", (req, res) => {
   });
 });
 
+// Page d'assistance
+app.get("/support", (_req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assistance — Sakinah</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 24px 16px; color: #2c3e50; line-height: 1.7; }
+    h1 { color: #27ae60; font-size: 28px; }
+    h2 { color: #27ae60; font-size: 20px; margin-top: 36px; border-bottom: 2px solid #eafaf1; padding-bottom: 8px; }
+    details { background: #f9f9f9; border-left: 4px solid #27ae60; border-radius: 4px; padding: 12px 16px; margin: 10px 0; }
+    summary { font-weight: 600; cursor: pointer; color: #2c3e50; }
+    summary:hover { color: #27ae60; }
+    details p { margin: 10px 0 0 0; color: #555; }
+    .contact-box { background: #eafaf1; border-radius: 12px; padding: 20px 24px; margin-top: 32px; }
+    .contact-box a { color: #27ae60; font-weight: 600; }
+    .badge { display: inline-block; background: #27ae60; color: white; border-radius: 20px; padding: 4px 12px; font-size: 13px; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <h1>💚 Assistance Sakinah</h1>
+  <p>Bienvenue sur la page d'assistance de Sakinah. Retrouvez ci-dessous les réponses aux questions les plus fréquentes.</p>
+
+  <h2>Compte et connexion</h2>
+
+  <details>
+    <summary>Comment créer un compte ?</summary>
+    <p>Ouvre l'application et appuie sur "S'inscrire". Remplis ton pseudo, ton email et un mot de passe. Un email de vérification te sera envoyé pour activer ton compte.</p>
+  </details>
+
+  <details>
+    <summary>J'ai oublié mon mot de passe, que faire ?</summary>
+    <p>Sur l'écran de connexion, appuie sur "Mot de passe oublié ?". Entre ton adresse email et tu recevras un lien pour le réinitialiser.</p>
+  </details>
+
+  <details>
+    <summary>Je ne reçois pas l'email de vérification</summary>
+    <p>Vérifie ton dossier spam ou courrier indésirable. Si tu ne trouves toujours pas l'email après quelques minutes, contacte-nous à l'adresse ci-dessous.</p>
+  </details>
+
+  <h2>Compte mineur et consentement parental</h2>
+
+  <details>
+    <summary>Mon enfant a moins de 15 ans, comment l'inscrire ?</summary>
+    <p>Lors de l'inscription, si l'enfant indique une tranche d'âge inférieure à 15 ans, un email de consentement sera automatiquement envoyé à l'adresse du parent renseignée. Le parent doit valider via le lien reçu pour activer le compte.</p>
+  </details>
+
+  <details>
+    <summary>Comment accéder à l'espace parent ?</summary>
+    <p>Une fois le consentement validé, connecte-toi avec ton email parent et le mot de passe que tu as créé lors de la confirmation. L'espace parent te permet de consulter l'activité de ton enfant.</p>
+  </details>
+
+  <details>
+    <summary>Comment supprimer le compte de mon enfant ?</summary>
+    <p>Connecte-toi à ton espace parent, va dans "Gestion du compte" puis appuie sur "Supprimer le compte de mon enfant". Cette action est irréversible.</p>
+  </details>
+
+  <h2>Utilisation de l'application</h2>
+
+  <details>
+    <summary>Comment fonctionne le baromètre d'humeur ?</summary>
+    <p>Chaque jour, tu peux noter ton humeur sur une échelle de 1 à 5 et ajouter une note personnelle. Ces entrées sont privées et visibles uniquement par toi (et ton parent si tu as moins de 15 ans).</p>
+  </details>
+
+  <details>
+    <summary>Mes témoignages sont-ils anonymes ?</summary>
+    <p>Oui, par défaut les témoignages sont publiés de façon anonyme. Tu peux choisir d'afficher ton pseudo lors de la rédaction. Tous les témoignages sont modérés avant publication.</p>
+  </details>
+
+  <details>
+    <summary>Comment désactiver les notifications ?</summary>
+    <p>Va dans les réglages de ton téléphone → Applications → Sakinah → Notifications, puis désactive-les. Tu peux également les gérer depuis l'application dans ton profil.</p>
+  </details>
+
+  <h2>Suppression et données</h2>
+
+  <details>
+    <summary>Comment supprimer mon compte ?</summary>
+    <p>Va dans ton profil → "Supprimer mon compte". Toutes tes données (humeurs, témoignages, commentaires) seront définitivement supprimées.</p>
+  </details>
+
+  <details>
+    <summary>Quelles données collectez-vous ?</summary>
+    <p>Nous collectons uniquement les données nécessaires au fonctionnement de l'application : email, pseudo, entrées d'humeur et témoignages. Consulte notre <a href="/privacy-policy">politique de confidentialité</a> pour plus de détails.</p>
+  </details>
+
+  <div class="contact-box">
+    <span class="badge">Contact</span>
+    <h2 style="margin-top: 8px; border: none;">Vous n'avez pas trouvé votre réponse ?</h2>
+    <p>Notre équipe est disponible pour vous aider. Écrivez-nous à :<br>
+    <a href="mailto:st.services92@gmail.com">st.services92@gmail.com</a></p>
+    <p style="color: #888; font-size: 13px;">Nous répondons généralement sous 48h.</p>
+  </div>
+
+</body>
+</html>`);
+});
+
 // Politique de confidentialité
 app.get("/privacy-policy", (_req, res) => {
   res.send(`<!DOCTYPE html>
