@@ -246,6 +246,11 @@ function getParentalConsentEmail(data) {
         l'inscription des utilisateurs de moins de 18 ans.
       </p>
 
+      <!-- Avertissement téléchargement app -->
+      <div class="warning" style="background-color: #EBF5FB; border-left: 4px solid #3498DB; color: #2C3E50;">
+        📱 <strong>Important :</strong> Pour confirmer le consentement, vous devez avoir téléchargé l'application <strong>Sakinah</strong> sur votre téléphone. Le lien ci-dessous ouvrira directement l'application.
+      </div>
+
       <!-- Bouton de confirmation -->
       <center>
         <a href="${confirmationLink}" class="cta-button">
@@ -254,7 +259,7 @@ function getParentalConsentEmail(data) {
       </center>
 
       <p class="message" style="font-size: 13px; color: #95A5A6;">
-        <em>Ces liens sont valides pendant 7 jours. Après cette période, votre enfant devra se réinscrire.</em>
+        <em>Ce lien est valide pendant 7 jours. Après cette période, votre enfant devra se réinscrire.</em>
       </p>
 
       <!-- À propos de Sakinah -->

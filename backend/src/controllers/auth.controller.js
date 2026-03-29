@@ -174,9 +174,8 @@ class AuthController {
             parent_email
           );
 
-          // Générer le lien de confirmation
-          const apiUrl = process.env.API_URL || "http://localhost:3000";
-          const confirmationLink = `${apiUrl}/api/auth/confirm-parental-consent/${consent.consent_token}`;
+          // Générer le lien de confirmation (deep link Flutter)
+          const confirmationLink = `sakinah://confirm-parental-consent/${consent.consent_token}`;
 
           // Préparer l'email pour le parent
           const emailData = {
