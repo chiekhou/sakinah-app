@@ -1,6 +1,11 @@
 const User = require("../models/User");
 const MoodEntry = require("../models/MoodEntry");
 const ParentalConsent = require("../models/ParentalConsent");
+const Testimonial = require("../models/Testimonial");
+const TestimonialLike = require("../models/TestimonialLike");
+const TestimonialComment = require("../models/TestimonialComment");
+const Notification = require("../models/Notification");
+const FCMToken = require("../models/FCMToken");
 const { sendEmail } = require("../services/email.service");
 
 class ParentController {
@@ -125,11 +130,30 @@ class ParentController {
         return res.status(404).json({ error: "Aucun enfant lié à ce compte" });
       }
 
-      // Révoquer le consentement avant suppression
-      await ParentalConsent.revokeConsent(
-        child.id,
-        "Suppression par le parent",
-      );
+      // Révoquer le consentement si actif (enfant inscrit via email parental)
+      // Si pas de consentement actif (ajout direct dashboard), on ignore
+      try {
+        await ParentalConsent.revokeConsent(child.id, "Suppression par le parent");
+      } catch (e) {
+        // Pas de consentement actif — enfant ajouté directement, on continue
+      }
+
+      // Supprimer les données liées avant de supprimer l'utilisateur
+      // (évite les erreurs de contrainte de clé étrangère)
+      const childId = child.id;
+      await FCMToken.destroy({ where: { user_id: childId } });
+      await Notification.destroy({ where: { user_id: childId } });
+      await MoodEntry.destroy({ where: { user_id: childId } });
+
+      // Pour les témoignages : supprimer likes/commentaires puis les témoignages
+      const testimonials = await Testimonial.findAll({ where: { user_id: childId } });
+      for (const t of testimonials) {
+        await TestimonialLike.destroy({ where: { testimonial_id: t.id } });
+        await TestimonialComment.destroy({ where: { testimonial_id: t.id } });
+      }
+      await TestimonialLike.destroy({ where: { user_id: childId } });
+      await TestimonialComment.destroy({ where: { user_id: childId } });
+      await Testimonial.destroy({ where: { user_id: childId } });
 
       await child.destroy();
 
