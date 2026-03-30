@@ -261,6 +261,18 @@ app.get("/privacy-policy", (_req, res) => {
   <p>Pour exercer ces droits, contactez-nous à : <strong>st.services92@gmail.com</strong><br>
   Vous pouvez également supprimer votre compte directement depuis l'application dans <strong>Profil → Supprimer mon compte</strong>.</p>
 
+  <div style="background:#fef9f0;border-left:4px solid #e67e22;border-radius:4px;padding:16px 20px;margin:20px 0;">
+    <strong>🗑️ Demander la suppression de votre compte et de vos données</strong>
+    <p style="margin:10px 0 0 0;">Si vous souhaitez que nous supprimions votre compte et toutes les données associées (humeurs, témoignages, commentaires), envoyez-nous un email avec l'objet <strong>"Suppression de compte"</strong> en précisant l'adresse email liée à votre compte.</p>
+    <p style="margin:10px 0 0 0;">
+      <a href="mailto:st.services92@gmail.com?subject=Suppression%20de%20compte&body=Bonjour%2C%0A%0AJe%20souhaite%20supprimer%20mon%20compte%20Sakinah%20et%20toutes%20les%20donn%C3%A9es%20associ%C3%A9es.%0A%0AEmail%20du%20compte%20%3A%20%5BVOTRE%20EMAIL%5D%0A%0AMerci."
+        style="display:inline-block;background:#e67e22;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
+        Demander la suppression par email
+      </a>
+    </p>
+    <p style="margin:10px 0 0 0;color:#888;font-size:13px;">Nous traitons les demandes dans un délai de <strong>30 jours</strong> conformément au RGPD.</p>
+  </div>
+
   <h2>8. Sécurité</h2>
   <ul>
     <li>Les mots de passe sont chiffrés avec <strong>bcrypt</strong></li>

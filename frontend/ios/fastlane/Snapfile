@@ -1,0 +1,20 @@
+# Devices requis par App Store Connect
+# ⚠️  App Store exige du 6.9" — utiliser Pro Max, pas Pro
+devices([
+  "iPhone 17 Pro Max",   # 6.9" — obligatoire (à défaut : iPhone 16 Pro Max)
+  "iPhone 16 Pro Max",   # 6.9" — fallback si 17 Pro Max indisponible
+])
+
+# Langues de l'app
+languages([
+  "fr-FR",
+])
+
+# Dossier de sortie des screenshots
+output_directory("./fastlane/screenshots")
+
+# Efface les anciens screenshots avant chaque run
+clear_previous_screenshots(true)
+
+# Schéma Xcode à utiliser
+scheme("Runner")

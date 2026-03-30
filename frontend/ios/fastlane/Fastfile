@@ -1,0 +1,38 @@
+default_platform(:ios)
+
+platform :ios do
+
+  desc "Génère les screenshots pour App Store Connect"
+  lane :screenshots do
+    # 1. Compiler l'app Flutter en mode release pour le simulateur
+    Dir.chdir("../..") do
+      sh("flutter build ios --simulator --no-codesign")
+    end
+
+    # 2. Lancer le test d'intégration Flutter qui prend les screenshots
+    Dir.chdir("../..") do
+      sh("flutter test integration_test/screenshots_test.dart " \
+         "--dart-define=SCREENSHOT_MODE=true")
+    end
+
+    # 3. Copier les screenshots dans le bon dossier Fastlane
+    sh("cp -r ../../build/ios/screenshots/* ./fastlane/screenshots/ 2>/dev/null || true")
+  end
+
+  desc "Upload les screenshots vers App Store Connect"
+  lane :upload_screenshots do
+    deliver(
+      skip_binary_upload: true,
+      skip_metadata:       false,
+      screenshots_path:    "./fastlane/screenshots",
+      overwrite_screenshots: true,
+    )
+  end
+
+  desc "Générer + uploader en une commande"
+  lane :release_screenshots do
+    screenshots
+    upload_screenshots
+  end
+
+end
