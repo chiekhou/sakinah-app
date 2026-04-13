@@ -1,11 +1,14 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.sakinah.app",
+      "package_name": "com.sakinahapp.fr",
       "sha256_cert_fingerprints": [
-        "VOTRE_SHA256_FINGERPRINT_ICI"
+        "1E:E5:47:69:EE:4C:23:97:BE:C5:63:B2:09:44:E0:8D:7B:2B:8D:91:30:68:D1:31:98:83:22:EB:62:4B:83:8F"
       ]
     }
   }

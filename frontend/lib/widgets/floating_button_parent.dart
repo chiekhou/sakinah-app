@@ -9,7 +9,7 @@ class FloatingParentButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Positioned(
       top: MediaQuery.of(context).padding.top + 16,
-      right: 80, // même position que le bouton admin
+      right: 68, // légèrement plus proche du bouton notification
       child: Material(
         color: Colors.transparent,
         child: InkWell(

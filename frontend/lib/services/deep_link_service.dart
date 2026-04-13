@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:sakinah_app/services/api_service.dart';
-import 'package:sakinah_app/screens/auth/reset_password_screen.dart';
 
 /// Service pour gérer les deep links (vérification email, reset password, etc.)
 class DeepLinkService {
@@ -21,6 +20,9 @@ class DeepLinkService {
 
   /// Token de consentement parental en attente (si navigation pas encore prête)
   static String? pendingConsentToken;
+
+  /// Token de reset password en attente (si navigation pas encore prête)
+  static String? pendingResetToken;
 
   /// Initialiser le service de deep links
   Future<void> init() async {
@@ -161,37 +163,12 @@ class DeepLinkService {
     }
   }
 
-  /// Naviguer vers la page de reset password avec le token
+  /// Stocker le token de reset password — le splash screen navigue
   Future<void> _navigateToResetPassword(String token) async {
-    // PRODUCTION: Log sensible désactivé (expose token)
-    // debugPrint('🔗 Navigation reset password avec token: $token');
-
-    // Marquer immédiatement pour empêcher le splash screen de naviguer
     hasNavigated = true;
-
-    // Attendre que le navigator soit prêt (cold start)
-    NavigatorState? navigator = navigatorKey.currentState;
-    int attempts = 0;
-    while (navigator == null && attempts < 100) { // 10s pour iOS cold start
-      debugPrint('🔗 Navigator pas encore prêt, attente... (tentative ${attempts + 1})');
-      await Future.delayed(const Duration(milliseconds: 100));
-      navigator = navigatorKey.currentState;
-      attempts++;
-    }
-
-    if (navigator != null) {
-      debugPrint('🔗 Navigator prêt, navigation vers ResetPasswordScreen');
-      navigator.pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (context) => ResetPasswordScreen(token: token),
-        ),
-        (route) => false,
-      );
-    } else {
-      debugPrint('🔗 ⚠️ Navigator toujours null après $attempts tentatives');
-      hasNavigated = false; // Reset pour permettre au splash screen de prendre le relais
-      _showMessage('Erreur de navigation', isSuccess: false);
-    }
+    pendingResetToken = token;
+    // Ne pas naviguer ici : le contexte du navigator n'est pas fiable au cold start
+    // Le splash screen prend le relais avec son propre contexte
   }
 
   /// Stocker le token de consentement parental — le splash screen navigue

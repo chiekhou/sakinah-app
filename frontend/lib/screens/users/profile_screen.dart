@@ -209,17 +209,17 @@ class ProfileScreen extends StatelessWidget {
               },
             ),
 
-            // Bouton Soutenir le projet
-            _buildMenuCard(
-              context,
-              icon: Icons.volunteer_activism,
-              title: 'Soutenir Sakinah',
-              subtitle: 'Aide-nous à grandir',
-              onTap: () {
-                Navigator.pushNamed(context, '/support');
-              },
-              isHighlighted: true,
-            ),
+            // // Bouton Soutenir le projet
+            // _buildMenuCard(
+            //   context,
+            //   icon: Icons.volunteer_activism,
+            //   title: 'Soutenir Sakinah',
+            //   subtitle: 'Aide-nous à grandir',
+            //   onTap: () {
+            //     Navigator.pushNamed(context, '/support');
+            //   },
+            //   isHighlighted: true,
+            // ),
 
             // Évaluer l'application
             _buildMenuCard(
@@ -431,16 +431,16 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                TextButton.icon(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/support');
-                  },
-                  icon: const Icon(Icons.volunteer_activism, size: 18),
-                  label: const Text('Soutenir'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppTheme.primaryColor,
-                  ),
-                ),
+                // TextButton.icon(
+                //   onPressed: () {
+                //     Navigator.pushNamed(context, '/support');
+                //   },
+                //   icon: const Icon(Icons.volunteer_activism, size: 18),
+                //   label: const Text('Soutenir'),
+                //   style: TextButton.styleFrom(
+                //     foregroundColor: AppTheme.primaryColor,
+                //   ),
+                // ),
               ],
             ),
 

@@ -200,7 +200,7 @@ class SupportScreen extends StatelessWidget {
             const SizedBox(height: 32),
 
             // Section don PayPal
-            Container(
+            /*    Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -292,8 +292,7 @@ class SupportScreen extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-
+            ),*/
             const SizedBox(height: 24),
 
             // Note de remerciement

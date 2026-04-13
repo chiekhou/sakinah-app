@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/providers/auth_provider.dart';
+import 'package:sakinah_app/screens/auth/reset_password_screen.dart';
 import 'package:sakinah_app/screens/parent/parent_confirmation_screen.dart';
 import 'package:sakinah_app/services/deep_link_service.dart';
 
@@ -58,6 +59,20 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 6000));
 
     if (!mounted) return;
+
+    // Si un token de reset password est en attente, naviguer directement
+    if (DeepLinkService.pendingResetToken != null) {
+      final token = DeepLinkService.pendingResetToken!;
+      DeepLinkService.pendingResetToken = null;
+      DeepLinkService.hasNavigated = true;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => ResetPasswordScreen(token: token),
+        ),
+        (route) => false,
+      );
+      return;
+    }
 
     // Si un token de consentement est en attente, naviguer directement
     if (DeepLinkService.pendingConsentToken != null) {

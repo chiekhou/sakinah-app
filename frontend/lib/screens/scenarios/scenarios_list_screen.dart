@@ -131,7 +131,7 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Mises en situation',
+                      'Scénarios',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 24,

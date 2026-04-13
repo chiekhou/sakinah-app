@@ -166,6 +166,10 @@ class ApiService {
         await saveToken(data['token']);
         await saveUser(data['user']);
 
+        // Vider l'UUID anonyme pour forcer l'utilisation du vrai ID à la prochaine lecture
+        final prefs2 = await SharedPreferences.getInstance();
+        await prefs2.remove('anonymous_user_id');
+
         return {'success': true, 'token': data['token'], 'user': data['user']};
       } else {
         return {'success': false, 'error': _handleError(response)};

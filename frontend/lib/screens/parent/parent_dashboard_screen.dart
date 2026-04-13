@@ -705,7 +705,14 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          if (_activities == null)
+          if (_activities == null && _children.isEmpty)
+            const Center(
+              child: Text(
+                'Aucun enfant lié.',
+                style: TextStyle(color: Colors.grey),
+              ),
+            )
+          else if (_activities == null)
             const Center(child: CircularProgressIndicator())
           else ...[
             if (avg != null)

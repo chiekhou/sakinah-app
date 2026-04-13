@@ -6,6 +6,7 @@
 *.key
 docker-compose.yml
 **/init-scripts/
+testers.csv
 
 # Node.js
 node_modules/
