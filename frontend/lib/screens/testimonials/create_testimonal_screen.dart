@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/providers/auth_provider.dart';
 import 'package:sakinah_app/services/testimonial_service.dart';
+import 'package:sakinah_app/widgets/safety_reminder_dialog.dart';
 
 class CreateTestimonyScreen extends StatefulWidget {
   const CreateTestimonyScreen({super.key});
@@ -100,6 +101,16 @@ class _CreateTestimonyScreenState extends State<CreateTestimonyScreen> {
         'Ton témoignage doit contenir au moins 10 caractères.\n\nActuellement : ${content.length} caractère${content.length > 1 ? 's' : ''}.',
       );
       return;
+    }
+
+    // Rappel de sécurité obligatoire avant publication pour les mineurs
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.isMinor) {
+      final accepted = await showSafetyReminderDialog(
+        context,
+        feature: 'la publication de ton témoignage',
+      );
+      if (!accepted || !mounted) return;
     }
 
     setState(() => _isLoading = true);

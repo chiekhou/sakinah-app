@@ -15,6 +15,9 @@ dependencies {
 
   // When using the BoM, don't specify versions in Firebase dependencies
   coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+
+  // Requis pour WindowCompat (edge-to-edge Android 15+)
+  implementation("androidx.core:core-ktx:1.13.1")
 }
 
 val keystoreProperties = Properties()

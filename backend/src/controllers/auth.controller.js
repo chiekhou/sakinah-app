@@ -395,6 +395,9 @@ class AuthController {
           status: user.status,
           avatar_url: user.avatar_url,
           is_minor: user.is_minor,
+          can_post_content: user.is_minor
+            ? (user.accessibility_settings?.can_post_content ?? false)
+            : true,
           // Informations pour professionnels
           ...(user.isProfessional() && {
             professional_title: user.professional_title,

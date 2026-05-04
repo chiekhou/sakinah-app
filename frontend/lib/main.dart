@@ -23,7 +23,7 @@ import 'package:sakinah_app/screens/users/admin/admin_users_screen.dart';
 import 'package:sakinah_app/screens/users/edit_profile_screen.dart';
 import 'package:sakinah_app/screens/users/history_screen.dart';
 import 'package:sakinah_app/screens/users/about_screen.dart';
-// import 'package:sakinah_app/screens/users/support_screen.dart';
+import 'package:sakinah_app/screens/users/support_screen.dart';
 import 'package:sakinah_app/screens/legal/privacy_policy_screen.dart';
 import 'package:sakinah_app/screens/legal/terms_of_service_screen.dart';
 import 'package:sakinah_app/screens/parent/parent_confirmation_screen.dart';
@@ -115,7 +115,7 @@ class _MyAppState extends State<MyApp> {
           '/edit-profile': (context) => const EditProfileScreen(),
           '/history': (context) => const HistoryScreen(),
           '/about': (context) => const AboutScreen(),
-          // '/support': (context) => const SupportScreen(),
+          '/support': (context) => const SupportScreen(),
           '/privacy-policy': (context) => const PrivacyPolicyScreen(),
           '/terms-of-service': (context) => const TermsOfServiceScreen(),
           '/parent-dashboard': (context) => const ParentDashboardScreen(),

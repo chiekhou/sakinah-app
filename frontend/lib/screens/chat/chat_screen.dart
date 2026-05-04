@@ -236,6 +236,25 @@ class _ChatScreenState extends State<ChatScreen> {
         onTap: () => FocusScope.of(context).unfocus(),
         child: Column(
           children: [
+            // Bannière IA — affichée pour tous les utilisateurs
+            Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                color: Colors.orange.shade800,
+                child: const Row(
+                  children: [
+                    Icon(Icons.shield_outlined, color: Colors.white, size: 16),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Tu parles avec une IA, pas une vraie personne. '
+                        'Ne partage jamais tes informations personnelles.',
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             Expanded(
               child: _messages.isEmpty ? _buildEmptyState() : _buildMessageList(),
             ),

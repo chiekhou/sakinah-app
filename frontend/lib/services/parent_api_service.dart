@@ -162,6 +162,28 @@ class ParentApiService {
     }
   }
 
+  /// Activer / désactiver les publications communautaires d'un enfant
+  /// PATCH /api/parent/child/permissions
+  static Future<Map<String, dynamic>> toggleChildPosting({
+    required String childId,
+    required bool canPost,
+  }) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/parent/child/permissions'),
+        headers: await _authHeaders(),
+        body: json.encode({'child_id': childId, 'can_post_content': canPost}),
+      );
+      final data = json.decode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, ...data};
+      }
+      return {'success': false, 'error': data['error'] ?? 'Erreur'};
+    } catch (e) {
+      return {'success': false, 'error': 'Erreur de connexion'};
+    }
+  }
+
   /// Envoyer une demande de suppression de compte
   /// POST /api/parent/delete-request
   static Future<Map<String, dynamic>> sendDeleteRequest() async {

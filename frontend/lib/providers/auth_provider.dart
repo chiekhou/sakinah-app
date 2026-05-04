@@ -164,4 +164,15 @@ class AuthProvider with ChangeNotifier {
   bool get isVerified {
     return _currentUser?['is_verified'] == true;
   }
+
+  /// Vérifier si l'utilisateur est mineur
+  bool get isMinor {
+    return _currentUser?['is_minor'] == true;
+  }
+
+  /// Vérifier si le mineur est autorisé à publier du contenu communautaire
+  /// (toujours true pour les non-mineurs)
+  bool get canPostContent {
+    return _currentUser?['can_post_content'] != false;
+  }
 }

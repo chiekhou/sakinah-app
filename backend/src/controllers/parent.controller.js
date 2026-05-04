@@ -27,6 +27,7 @@ class ParentController {
           "status",
           "created_at",
           "last_active",
+          "accessibility_settings",
         ],
       });
 
@@ -276,6 +277,44 @@ class ParentController {
     } catch (error) {
       console.error("Erreur sendDeleteRequest:", error);
       res.status(500).json({ error: "Erreur lors de l'envoi de la demande" });
+    }
+  }
+  /**
+   * Activer / désactiver les publications communautaires d'un enfant
+   * PATCH /api/parent/child/permissions
+   */
+  async toggleChildPosting(req, res) {
+    try {
+      const { child_id, can_post_content } = req.body;
+
+      if (typeof can_post_content !== "boolean") {
+        return res.status(400).json({ error: "can_post_content doit être un booléen" });
+      }
+
+      const child = await User.findOne({
+        where: { id: child_id, parent_id: req.user.id, is_minor: true },
+      });
+
+      if (!child) {
+        return res.status(404).json({ error: "Enfant introuvable" });
+      }
+
+      const updatedSettings = {
+        ...child.accessibility_settings,
+        can_post_content,
+      };
+
+      await child.update({ accessibility_settings: updatedSettings });
+
+      res.status(200).json({
+        message: can_post_content
+          ? "Publications activées pour cet enfant."
+          : "Publications désactivées pour cet enfant.",
+        can_post_content,
+      });
+    } catch (error) {
+      console.error("Erreur toggleChildPosting:", error);
+      res.status(500).json({ error: "Erreur lors de la mise à jour des permissions" });
     }
   }
 }

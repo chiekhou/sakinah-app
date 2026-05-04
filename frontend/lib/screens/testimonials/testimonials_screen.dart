@@ -6,6 +6,7 @@ import 'package:sakinah_app/providers/testimonials_provider.dart';
 import 'package:sakinah_app/screens/testimonials/create_testimonal_screen.dart';
 import 'package:sakinah_app/screens/testimonials/testimony_details_screen.dart';
 import 'package:sakinah_app/utils/auth_helper.dart';
+import 'package:sakinah_app/widgets/safety_reminder_dialog.dart';
 
 class TestimonialsScreen extends StatefulWidget {
   const TestimonialsScreen({super.key});
@@ -67,22 +68,61 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
+          // Capturer tout ce qui dépend du context AVANT le premier await
+          final authProvider =
+              Provider.of<AuthProvider>(context, listen: false);
+          final isMinor = authProvider.isMinor;
+          final navigator = Navigator.of(context);
+
           final canProceed = await AuthHelper.requireAuth(
             context,
             feature: 'partager ton témoignage',
           );
+          if (!canProceed || !mounted) return;
 
-          if (canProceed && mounted) {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const CreateTestimonyScreen(),
+          // Vérification contrôle parental pour les mineurs
+          if (isMinor && !authProvider.canPostContent) {
+            showDialog(
+              context: navigator.context,
+              builder: (_) => AlertDialog(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                title: const Text('Autorisation requise'),
+                content: const Text(
+                  'Ton parent doit activer les publications depuis '
+                  'l\'Espace Parent avant que tu puisses partager du contenu.',
+                ),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(navigator.context),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor),
+                    child: const Text('OK',
+                        style: TextStyle(color: Colors.white)),
+                  ),
+                ],
               ),
             );
+            return;
+          }
 
-            if (result == true) {
-              _reload();
-            }
+          // Dialog sécurité obligatoire pour les mineurs autorisés
+          if (isMinor) {
+            final accepted = await showSafetyReminderDialog(
+              navigator.context,
+              feature: 'la section Témoignages',
+            );
+            if (!accepted || !mounted) return;
+          }
+
+          final result = await navigator.push(
+            MaterialPageRoute(
+              builder: (_) => const CreateTestimonyScreen(),
+            ),
+          );
+
+          if (result == true) {
+            _reload();
           }
         },
         backgroundColor: AppTheme.primaryColor,
