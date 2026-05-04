@@ -37,4 +37,10 @@ router.post("/revoke", requireParent, parentController.revokeConsent);
 router.post("/add-child", requireParent, parentController.addChild);
 router.post("/delete-request", requireParent, parentController.sendDeleteRequest);
 
+/**
+ * @route   PATCH /api/parent/child/permissions
+ * @desc    Activer/désactiver les publications communautaires de l'enfant
+ */
+router.patch("/child/permissions", requireParent, parentController.toggleChildPosting);
+
 module.exports = router;

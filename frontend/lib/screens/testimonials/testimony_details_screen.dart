@@ -5,6 +5,7 @@ import 'package:sakinah_app/providers/auth_provider.dart';
 import 'package:sakinah_app/providers/testimonials_provider.dart';
 import 'package:sakinah_app/services/testimonial_service.dart';
 import 'package:sakinah_app/utils/auth_helper.dart';
+import 'package:sakinah_app/widgets/safety_reminder_dialog.dart';
 
 class TestimonyDetailScreen extends StatefulWidget {
   final String testimonialId;
@@ -95,14 +96,48 @@ class _TestimonyDetailScreenState extends State<TestimonyDetailScreen> {
   Future<void> _submitComment() async {
     if (_commentController.text.trim().isEmpty) return;
 
+    // Capturer avant le premier await
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final isMinor = authProvider.isMinor;
 
     final canProceed = await AuthHelper.requireAuth(
       context,
       feature: 'commenter ce témoignage',
     );
+    if (!canProceed || !mounted) return;
 
-    if (!canProceed) return;
+    // Vérification contrôle parental
+    if (isMinor && !authProvider.canPostContent) {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Autorisation requise'),
+          content: const Text(
+            'Ton parent doit activer les publications depuis '
+            'l\'Espace Parent avant que tu puisses commenter.',
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor),
+              child: const Text('OK', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Rappel de sécurité pour les mineurs autorisés
+    if (isMinor) {
+      final accepted = await showSafetyReminderDialog(
+        context,
+        feature: 'les commentaires',
+      );
+      if (!accepted || !mounted) return;
+    }
 
     setState(() => _isSubmittingComment = true);
 
@@ -114,7 +149,7 @@ class _TestimonyDetailScreenState extends State<TestimonyDetailScreen> {
       );
 
       _commentController.clear();
-      FocusScope.of(context).unfocus();
+      if (mounted) FocusScope.of(context).unfocus();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

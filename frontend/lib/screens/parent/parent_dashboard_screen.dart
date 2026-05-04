@@ -128,6 +128,28 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     );
   }*/
 
+  Future<void> _handleTogglePosting(bool currentValue) async {
+    final child = _selectedChild;
+    if (child == null) return;
+    final newValue = !currentValue;
+    final result = await ParentApiService.toggleChildPosting(
+      childId: child['id'],
+      canPost: newValue,
+    );
+    if (!mounted) return;
+    if (result['success'] == true) {
+      _showSnack(
+        newValue
+            ? 'Publications activées pour ${child['username']}.'
+            : 'Publications désactivées pour ${child['username']}.',
+        isError: false,
+      );
+      await _loadChildren();
+    } else {
+      _showSnack(result['error'] ?? 'Erreur', isError: true);
+    }
+  }
+
   Future<void> _handleDeleteChild() async {
     final child = _selectedChild;
     if (child == null) return;
@@ -826,6 +848,59 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             subtitle: 'Suspend le compte de votre enfant',
             onTap: _handleRevokeConsent,
           )*/
+          const Divider(height: 24),
+          // Contrôle parental : autoriser les publications communautaires
+          Builder(builder: (context) {
+            final settings = (_selectedChild?['accessibility_settings']
+                as Map<String, dynamic>?) ?? {};
+            final canPost = settings['can_post_content'] as bool? ?? false;
+            return Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.forum_outlined,
+                    color: AppTheme.primaryColor,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Autoriser les publications',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        'Témoignages et commentaires communautaires',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: canPost,
+                  onChanged: (_) => _handleTogglePosting(canPost),
+                  activeThumbColor: AppTheme.primaryColor,
+                  activeTrackColor: AppTheme.primaryColor.withValues(alpha: 0.4),
+                ),
+              ],
+            );
+          }),
           const Divider(height: 24),
           _buildActionTile(
             icon: Icons.delete_outline_rounded,
