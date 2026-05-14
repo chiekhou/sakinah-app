@@ -304,4 +304,65 @@ Notification.markAllAsReadForUser = async function (userId) {
   );
 };
 
+/**
+ * Journal de supervision parentale
+ * Crée une entrée de supervision pour le parent d'un mineur.
+ * @param {string} parentId  - ID du compte parent
+ * @param {string} childId   - ID du compte enfant
+ * @param {string} childPseudo - Pseudo de l'enfant
+ * @param {'PROFILE_UPDATE'|'TESTIMONIAL'|'COMMENT'} action - Type d'action
+ */
+Notification.supervisionLog = async function (
+  parentId,
+  childId,
+  childPseudo,
+  action
+) {
+  const labels = {
+    PROFILE_UPDATE: {
+      title: "✏️ Modification de profil",
+      message: `${childPseudo} a modifié ses informations personnelles.`,
+    },
+    TESTIMONIAL: {
+      title: "📝 Témoignage publié",
+      message: `${childPseudo} a soumis un témoignage (en attente de modération).`,
+    },
+    COMMENT: {
+      title: "💬 Commentaire posté",
+      message: `${childPseudo} a posté un commentaire (en attente de modération).`,
+    },
+  };
+
+  const { title, message } = labels[action] || {
+    title: "👁️ Activité détectée",
+    message: `${childPseudo} a effectué une action sur l'application.`,
+  };
+
+  return await this.createNotification({
+    userId: parentId,
+    type: "SYSTEM_MESSAGE",
+    title,
+    message,
+    related_type: "USER",
+    related_id: childId,
+    metadata: { supervision: true, action, childId, childPseudo },
+  });
+};
+
+/**
+ * Récupérer les logs de supervision pour un parent et un enfant donné
+ */
+Notification.getSupervisionLogs = async function (parentId, childId, limit = 30) {
+  const { Op } = require("sequelize");
+  return await this.findAll({
+    where: {
+      user_id: parentId,
+      type: "SYSTEM_MESSAGE",
+      related_id: childId,
+    },
+    order: [["created_at", "DESC"]],
+    limit,
+  });
+};
+
 module.exports = Notification;

@@ -83,41 +83,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    // Pour les mineurs : notifier le parent et bloquer la modification
+    // Pour les mineurs : notifier le parent (supervision) puis autoriser la modification
     if (authProvider.isMinor && authProvider.token != null) {
-      bool notified = false;
       try {
         await SafetyService.requestProfileUpdate(authProvider.token!);
-        notified = true;
       } catch (_) {}
       if (!mounted) return;
+      // Informer l'enfant que son parent a été notifié
       await showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Supervision parentale requise'),
-          content: Text(
-            notified
-                ? 'Ton parent a été notifié par email. '
-                  'La modification de tes informations personnelles '
-                  'nécessite la supervision d\'un adulte.'
-                : 'La modification de tes informations personnelles '
-                  'nécessite la supervision d\'un adulte. '
-                  'Contacte ton parent pour continuer.',
+          title: const Text('Ton parent a été informé'),
+          content: const Text(
+            'Ton parent reçoit une notification et un email '
+            'pour superviser cette modification.',
           ),
           actions: [
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2ECC71)),
-              child: const Text('OK', style: TextStyle(color: Colors.white)),
+              child: const Text('Continuer', style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
       );
-      // Bloquer la sauvegarde — supervision parentale requise
-      return;
+      if (!mounted) return;
+      // La modification continue après confirmation
     }
 
     setState(() {

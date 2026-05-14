@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Notification = require("../models/Notification");
 const { sendEmail } = require("../services/email.service");
 const pushService = require("../services/push.service");
 
@@ -99,14 +100,21 @@ class SafetyController {
         `
       );
 
-      // Notification push en parallèle de l'email
+      // Notification push + log de supervision en parallèle
       pushService.sendToUser(
         parent.id,
         {
-          title: "⚠️ Demande de modification de profil",
-          body: `${user.pseudo || user.username} souhaite modifier ses informations personnelles.`,
+          title: "⚠️ Modification de profil",
+          body: `${user.pseudo || user.username} a modifié ses informations personnelles.`,
         },
         { type: "PROFILE_UPDATE_REQUEST", childId: user.id }
+      ).catch(() => {});
+
+      Notification.supervisionLog(
+        parent.id,
+        user.id,
+        user.pseudo || user.username,
+        "PROFILE_UPDATE"
       ).catch(() => {});
 
       res.json({
