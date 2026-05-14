@@ -56,6 +56,8 @@ class SafetyController {
     try {
       const user = req.user;
 
+      console.log("[DEBUG requestProfileUpdate] user.id=", user.id, "is_minor=", user.is_minor, "parent_id=", user.parent_id);
+
       if (!user.is_minor) {
         return res.status(400).json({ error: "Réservé aux comptes mineurs" });
       }
@@ -70,10 +72,13 @@ class SafetyController {
         attributes: ["id", "email", "pseudo"],
       });
 
+      console.log("[DEBUG requestProfileUpdate] parent=", parent?.email);
+
       if (!parent) {
         return res.status(404).json({ error: "Compte parent introuvable" });
       }
 
+      console.log("[DEBUG requestProfileUpdate] Sending email to", parent.email);
       await sendEmail(
         parent.email,
         "Sakinah — Demande de modification de profil",
@@ -117,6 +122,7 @@ class SafetyController {
         "PROFILE_UPDATE"
       ).catch(() => {});
 
+      console.log("[DEBUG requestProfileUpdate] Email sent, returning 200");
       res.json({
         message: "Ton parent a été notifié. Tu pourras modifier ton profil après son accord.",
       });
