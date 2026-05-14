@@ -43,7 +43,9 @@ class SafetyController {
       });
     } catch (error) {
       console.error("Erreur getStatus:", error);
-      res.status(500).json({ error: "Erreur lors de la récupération du statut" });
+      res
+        .status(500)
+        .json({ error: "Erreur lors de la récupération du statut" });
     }
   }
 
@@ -55,8 +57,6 @@ class SafetyController {
   async requestProfileUpdate(req, res) {
     try {
       const user = req.user;
-
-      console.log("[DEBUG requestProfileUpdate] user.id=", user.id, "is_minor=", user.is_minor, "parent_id=", user.parent_id);
 
       if (!user.is_minor) {
         return res.status(400).json({ error: "Réservé aux comptes mineurs" });
@@ -72,13 +72,10 @@ class SafetyController {
         attributes: ["id", "email", "pseudo"],
       });
 
-      console.log("[DEBUG requestProfileUpdate] parent=", parent?.email);
-
       if (!parent) {
         return res.status(404).json({ error: "Compte parent introuvable" });
       }
 
-      console.log("[DEBUG requestProfileUpdate] Sending email to", parent.email);
       await sendEmail(
         parent.email,
         "Sakinah — Demande de modification de profil",
@@ -102,33 +99,37 @@ class SafetyController {
               </p>
             </div>
           </div>
-        `
+        `,
       );
 
       // Notification push + log de supervision en parallèle
-      pushService.sendToUser(
-        parent.id,
-        {
-          title: "⚠️ Modification de profil",
-          body: `${user.pseudo || user.username} a modifié ses informations personnelles.`,
-        },
-        { type: "PROFILE_UPDATE_REQUEST", childId: user.id }
-      ).catch(() => {});
+      pushService
+        .sendToUser(
+          parent.id,
+          {
+            title: "⚠️ Modification de profil",
+            body: `${user.pseudo || user.username} a modifié ses informations personnelles.`,
+          },
+          { type: "PROFILE_UPDATE_REQUEST", childId: user.id },
+        )
+        .catch(() => {});
 
       Notification.supervisionLog(
         parent.id,
         user.id,
         user.pseudo || user.username,
-        "PROFILE_UPDATE"
+        "PROFILE_UPDATE",
       ).catch(() => {});
 
-      console.log("[DEBUG requestProfileUpdate] Email sent, returning 200");
       res.json({
-        message: "Ton parent a été notifié. Tu pourras modifier ton profil après son accord.",
+        message:
+          "Ton parent a été notifié. Tu pourras modifier ton profil après son accord.",
       });
     } catch (error) {
       console.error("Erreur requestProfileUpdate:", error);
-      res.status(500).json({ error: "Erreur lors de la notification du parent" });
+      res
+        .status(500)
+        .json({ error: "Erreur lors de la notification du parent" });
     }
   }
 }
