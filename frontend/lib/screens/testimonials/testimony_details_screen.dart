@@ -5,6 +5,7 @@ import 'package:sakinah_app/providers/auth_provider.dart';
 import 'package:sakinah_app/providers/testimonials_provider.dart';
 import 'package:sakinah_app/services/testimonial_service.dart';
 import 'package:sakinah_app/utils/auth_helper.dart';
+import 'package:sakinah_app/services/safety_service.dart';
 import 'package:sakinah_app/widgets/safety_reminder_dialog.dart';
 
 class TestimonyDetailScreen extends StatefulWidget {
@@ -137,6 +138,10 @@ class _TestimonyDetailScreenState extends State<TestimonyDetailScreen> {
         feature: 'les commentaires',
       );
       if (!accepted || !mounted) return;
+      // Enregistrer l'acceptation côté backend
+      if (authProvider.token != null) {
+        SafetyService.acknowledge(authProvider.token!).catchError((_) {});
+      }
     }
 
     setState(() => _isSubmittingComment = true);

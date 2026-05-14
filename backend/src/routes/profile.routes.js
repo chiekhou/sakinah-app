@@ -6,6 +6,7 @@ const {
   uploadAvatar,
   uploadDiploma,
 } = require("../middleware/upload.middleware");
+const { requireSafetyAcknowledgment } = require("../middleware/childSafety.middleware");
 
 // Routes protégées (nécessitent authentification)
 
@@ -20,6 +21,7 @@ router.post("/me/delete-request", authenticate, profileController.sendDeleteRequ
 router.post(
   "/me/avatar",
   authenticate,
+  requireSafetyAcknowledgment,
   uploadAvatar,
   profileController.uploadAvatar
 );

@@ -6,6 +6,7 @@ import 'package:sakinah_app/providers/testimonials_provider.dart';
 import 'package:sakinah_app/screens/testimonials/create_testimonal_screen.dart';
 import 'package:sakinah_app/screens/testimonials/testimony_details_screen.dart';
 import 'package:sakinah_app/utils/auth_helper.dart';
+import 'package:sakinah_app/services/safety_service.dart';
 import 'package:sakinah_app/widgets/safety_reminder_dialog.dart';
 
 class TestimonialsScreen extends StatefulWidget {
@@ -113,6 +114,10 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
               feature: 'la section Témoignages',
             );
             if (!accepted || !mounted) return;
+            // Enregistrer l'acceptation côté backend
+            if (authProvider.token != null) {
+              SafetyService.acknowledge(authProvider.token!).catchError((_) {});
+            }
           }
 
           final result = await navigator.push(

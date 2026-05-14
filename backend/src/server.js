@@ -314,6 +314,7 @@ const parentalConsentRoutes = require("./routes/parental-consent.routes");
 const parentRoutes = require("./routes/parent.routes");
 const testimonialRoutes = require("./routes/testimonial.routes");
 const notificationRoutes = require("./routes/notification.routes");
+const safetyRoutes = require("./routes/safety.routes");
 
 // Utiliser les routes
 app.use("/api/admin", adminRoutes);
@@ -329,6 +330,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/emergency", emergencyRoutes);
 app.use("/api/testimonials", testimonialRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/safety", safetyRoutes);
 //app.use("/api/users", userRoutes);
 
 // Gestion des erreurs 404

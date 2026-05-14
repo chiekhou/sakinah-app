@@ -2,13 +2,23 @@ const express = require("express");
 const router = express.Router();
 const testimonialController = require("../controllers/testimonial.controller");
 const { authenticateToken } = require("../middleware/auth.middleware");
+const {
+  requireSafetyAcknowledgment,
+  requireParentalContentPermission,
+} = require("../middleware/childSafety.middleware");
 
 /**
  * @route   POST /api/testimonials
  * @desc    Créer un témoignage
  * @access  Private (connecté uniquement)
  */
-router.post("/", authenticateToken, testimonialController.create);
+router.post(
+  "/",
+  authenticateToken,
+  requireSafetyAcknowledgment,
+  requireParentalContentPermission,
+  testimonialController.create
+);
 
 /**
  * @route   GET /api/testimonials
@@ -46,6 +56,8 @@ router.post("/:id/like", authenticateToken, testimonialController.toggleLike);
 router.post(
   "/:id/comment",
   authenticateToken,
+  requireSafetyAcknowledgment,
+  requireParentalContentPermission,
   testimonialController.addComment
 );
 
