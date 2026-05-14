@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:sakinah_app/constants/app_theme.dart';
 import 'package:sakinah_app/providers/auth_provider.dart';
 import 'package:sakinah_app/services/api_service.dart';
+import 'package:sakinah_app/services/safety_service.dart';
 import 'package:sakinah_app/widgets/custom_wigdet.dart';
 
 /// Écran d'édition de profil
@@ -80,13 +81,40 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       return;
     }
 
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    // Pour les mineurs : notifier le parent avant toute modification
+    if (authProvider.isMinor && authProvider.token != null) {
+      try {
+        await SafetyService.requestProfileUpdate(authProvider.token!);
+      } catch (_) {}
+      if (!mounted) return;
+      await showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Notification envoyée'),
+          content: const Text(
+            'Ton parent a été notifié par email. '
+            'Ton profil sera mis à jour après sa supervision.',
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2ECC71)),
+              child: const Text('OK', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+    }
+
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
       // 1. Upload avatar si changé
       String? newAvatarUrl;
       if (_newAvatarFile != null) {
@@ -99,7 +127,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
 
       // 2. Mettre à jour le profil
-      final token = await ApiService.getToken();
+      final token = authProvider.token ?? await ApiService.getToken();
       if (token == null) {
         throw Exception('Non connecté');
       }

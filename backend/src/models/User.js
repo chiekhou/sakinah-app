@@ -117,6 +117,10 @@ const User = sequelize.define(
         key: "id",
       },
     },
+    safety_reminder_acknowledged_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
 
     // ========== PROFESSIONNELS ==========
     professional_title: {
