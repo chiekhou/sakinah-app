@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const { sendEmail } = require("../services/email.service");
+const pushService = require("../services/push.service");
 
 class SafetyController {
   /**
@@ -65,17 +66,17 @@ class SafetyController {
       }
 
       const parent = await User.findByPk(user.parent_id, {
-        attributes: ["email", "pseudo"],
+        attributes: ["id", "email", "pseudo"],
       });
 
       if (!parent) {
         return res.status(404).json({ error: "Compte parent introuvable" });
       }
 
-      await sendEmail({
-        to: parent.email,
-        subject: "Sakinah — Demande de modification de profil",
-        html: `
+      await sendEmail(
+        parent.email,
+        "Sakinah — Demande de modification de profil",
+        `
           <div style="font-family: sans-serif; max-width: 520px; margin: auto;">
             <div style="background: linear-gradient(135deg, #2ECC71, #27AE60); padding: 28px 32px; border-radius: 12px 12px 0 0;">
               <h2 style="margin: 0; color: #fff; font-size: 20px;">Demande de modification de profil</h2>
@@ -88,15 +89,25 @@ class SafetyController {
                 (photo de profil ou description).
               </p>
               <p style="color: #374151;">
-                Vous pouvez superviser et autoriser cette modification depuis votre espace parent.
+                Vous pouvez superviser cette activité depuis votre espace parent.
               </p>
               <p style="margin-top: 24px; color: #9ca3af; font-size: 13px;">
                 Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.
               </p>
             </div>
           </div>
-        `,
-      });
+        `
+      );
+
+      // Notification push en parallèle de l'email
+      pushService.sendToUser(
+        parent.id,
+        {
+          title: "⚠️ Demande de modification de profil",
+          body: `${user.pseudo || user.username} souhaite modifier ses informations personnelles.`,
+        },
+        { type: "PROFILE_UPDATE_REQUEST", childId: user.id }
+      ).catch(() => {});
 
       res.json({
         message: "Ton parent a été notifié. Tu pourras modifier ton profil après son accord.",

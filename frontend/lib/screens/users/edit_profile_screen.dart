@@ -83,20 +83,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    // Pour les mineurs : notifier le parent avant toute modification
+    // Pour les mineurs : notifier le parent et bloquer la modification
     if (authProvider.isMinor && authProvider.token != null) {
+      bool notified = false;
       try {
         await SafetyService.requestProfileUpdate(authProvider.token!);
+        notified = true;
       } catch (_) {}
       if (!mounted) return;
       await showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (_) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Notification envoyée'),
-          content: const Text(
-            'Ton parent a été notifié par email. '
-            'Ton profil sera mis à jour après sa supervision.',
+          title: const Text('Supervision parentale requise'),
+          content: Text(
+            notified
+                ? 'Ton parent a été notifié par email. '
+                  'La modification de tes informations personnelles '
+                  'nécessite la supervision d\'un adulte.'
+                : 'La modification de tes informations personnelles '
+                  'nécessite la supervision d\'un adulte. '
+                  'Contacte ton parent pour continuer.',
           ),
           actions: [
             ElevatedButton(
@@ -108,6 +116,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ],
         ),
       );
+      // Bloquer la sauvegarde — supervision parentale requise
+      return;
     }
 
     setState(() {
