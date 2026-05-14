@@ -66,13 +66,10 @@ async function sendEmail(to, subject, html) {
     }
 
     const result = await response.json();
-    // PRODUCTION: Log simplifié (ne pas exposer d'ID)
-    // console.log("✅ Email envoyé avec succès - ID:", result.messageId);
-    // console.log("==============================================\n");
+    console.log("✅ [DEBUG] Email envoyé avec succès - ID:", result.messageId);
     return true;
   } catch (error) {
-    console.error("❌ Erreur envoi email"); // Message générique sans détails
-    // console.log("==============================================\n");
+    console.error("❌ [DEBUG] Erreur envoi email:", error.message);
     throw error;
   }
 }

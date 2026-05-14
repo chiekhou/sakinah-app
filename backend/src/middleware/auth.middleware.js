@@ -32,14 +32,9 @@ const authenticate = async (req, res, next) => {
       return res.status(403).json({ error: "Compte inactif ou suspendu" });
     }
 
-    // Ajouter l'utilisateur à la requête
-    req.user = {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      pseudo: user.pseudo,
-      status: user.status,
-    };
+    // Passer l'instance Sequelize complète pour que les controllers aient accès
+    // à tous les champs (is_minor, parent_id, safety_reminder_acknowledged_at, etc.)
+    req.user = user;
 
     // Mettre à jour last_active
     user

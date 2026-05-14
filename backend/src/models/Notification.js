@@ -343,8 +343,8 @@ Notification.supervisionLog = async function (
     type: "SYSTEM_MESSAGE",
     title,
     message,
-    related_type: "USER",
-    related_id: childId,
+    relatedType: "USER",
+    relatedId: childId,
     metadata: { supervision: true, action, childId, childPseudo },
   });
 };
