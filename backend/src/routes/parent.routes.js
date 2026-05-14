@@ -43,4 +43,10 @@ router.post("/delete-request", requireParent, parentController.sendDeleteRequest
  */
 router.patch("/child/permissions", requireParent, parentController.toggleChildPosting);
 
+/**
+ * @route   GET /api/parent/child/supervision-logs
+ * @desc    Journal de supervision des actions du mineur
+ */
+router.get("/child/supervision-logs", requireParent, parentController.getSupervisionLogs);
+
 module.exports = router;

@@ -43,6 +43,19 @@ class TestimonialController {
       // Notifier les admins
       pushService.notifyAdminNewTestimonial(testimonial.id).catch(() => {});
 
+      // Log de supervision si l'auteur est un mineur
+      const author = await User.findByPk(userId, {
+        attributes: ["is_minor", "parent_id", "pseudo", "username"],
+      });
+      if (author?.is_minor && author?.parent_id) {
+        Notification.supervisionLog(
+          author.parent_id,
+          userId,
+          author.pseudo || author.username,
+          "TESTIMONIAL"
+        ).catch(() => {});
+      }
+
       res.status(201).json({
         message:
           "Témoignage créé avec succès ! Il sera visible après modération.",
@@ -272,6 +285,19 @@ class TestimonialController {
         content: content.trim(),
         status: "PENDING",
       });
+
+      // Log de supervision si le commentateur est un mineur
+      const commenter = await User.findByPk(userId, {
+        attributes: ["is_minor", "parent_id", "pseudo", "username"],
+      });
+      if (commenter?.is_minor && commenter?.parent_id) {
+        Notification.supervisionLog(
+          commenter.parent_id,
+          userId,
+          commenter.pseudo || commenter.username,
+          "COMMENT"
+        ).catch(() => {});
+      }
 
       res.status(201).json({
         message: "Commentaire envoyé ! Il sera visible après modération.",

@@ -14,6 +14,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   List<Map<String, dynamic>> _children = [];
   int _selectedIndex = 0;
   Map<String, dynamic>? _activities;
+  List<Map<String, dynamic>> _supervisionLogs = [];
   String? _error;
 
   @override
@@ -45,10 +46,16 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   }
 
   Future<void> _loadActivities(String childId) async {
-    final result = await ParentApiService.getChildActivities(childId);
+    final results = await Future.wait([
+      ParentApiService.getChildActivities(childId),
+      ParentApiService.getSupervisionLogs(childId),
+    ]);
     if (mounted) {
       setState(() {
-        _activities = result['success'] == true ? result['activities'] : null;
+        _activities = results[0]['success'] == true ? results[0]['activities'] : null;
+        _supervisionLogs = results[1]['success'] == true
+            ? List<Map<String, dynamic>>.from(results[1]['logs'] ?? [])
+            : [];
       });
     }
   }
@@ -247,6 +254,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                     if (_selectedChild != null) _buildChildCard(),
                     const SizedBox(height: 20),
                     _buildMoodsCard(),
+                    const SizedBox(height: 20),
+                    _buildSupervisionCard(),
                     const SizedBox(height: 20),
                     _buildActionsCard(),
                     const SizedBox(height: 32),
@@ -807,6 +816,233 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             ],
           ],
         ],
+      ),
+    );
+  }
+
+  String _formatLogDate(String? isoDate) {
+    if (isoDate == null) return '';
+    final dt = DateTime.tryParse(isoDate)?.toLocal();
+    if (dt == null) return '';
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final day = DateTime(dt.year, dt.month, dt.day);
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    if (day == today) return "Aujourd'hui $h:$m";
+    if (day == yesterday) return "Hier $h:$m";
+    return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year} $h:$m';
+  }
+
+  Widget _buildSupervisionLogRow(Map<String, dynamic> log) {
+    final action = log['action'] as String? ?? '';
+    final message = log['message'] as String? ?? log['title'] as String? ?? '';
+    final date = log['created_at'] as String?;
+    final isRead = log['is_read'] as bool? ?? true;
+
+    final IconData icon;
+    final Color color;
+    switch (action) {
+      case 'PROFILE_UPDATE':
+        icon = Icons.edit_outlined;
+        color = Colors.orange;
+        break;
+      case 'TESTIMONIAL':
+        icon = Icons.rate_review_outlined;
+        color = Colors.blue;
+        break;
+      case 'COMMENT':
+        icon = Icons.chat_bubble_outline_rounded;
+        color = Colors.purple;
+        break;
+      default:
+        icon = Icons.notifications_outlined;
+        color = AppTheme.primaryColor;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  message,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: isRead ? FontWeight.normal : FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _formatLogDate(date),
+                  style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          if (!isRead)
+            Container(
+              width: 8,
+              height: 8,
+              margin: const EdgeInsets.only(top: 4),
+              decoration: const BoxDecoration(
+                color: AppTheme.primaryColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSupervisionCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppTheme.softShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.shield_outlined, color: AppTheme.primaryColor, size: 22),
+              SizedBox(width: 8),
+              Text(
+                'Journal de supervision',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_activities == null && _children.isNotEmpty)
+            const Center(child: CircularProgressIndicator())
+          else if (_supervisionLogs.isEmpty)
+            Text(
+              'Aucune activité récente.',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            )
+          else ...[
+            ..._supervisionLogs.take(5).map(_buildSupervisionLogRow),
+            if (_supervisionLogs.length > 5) ...[
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () => _showAllLogs(),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Voir les ${_supervisionLogs.length} entrées',
+                        style: const TextStyle(
+                          color: AppTheme.primaryColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppTheme.primaryColor,
+                        size: 18,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showAllLogs() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        maxChildSize: 0.9,
+        minChildSize: 0.4,
+        builder: (_, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Icon(Icons.shield_outlined, color: AppTheme.primaryColor),
+                    SizedBox(width: 8),
+                    Text(
+                      'Journal de supervision',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView.separated(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: _supervisionLogs.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (_, i) =>
+                      _buildSupervisionLogRow(_supervisionLogs[i]),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
       ),
     );
   }

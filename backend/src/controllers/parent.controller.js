@@ -317,6 +317,45 @@ class ParentController {
       res.status(500).json({ error: "Erreur lors de la mise à jour des permissions" });
     }
   }
+  /**
+   * Récupérer le journal de supervision pour un enfant
+   * GET /api/parent/child/supervision-logs?child_id=xxx
+   */
+  async getSupervisionLogs(req, res) {
+    try {
+      const { child_id } = req.query;
+      if (!child_id) {
+        return res.status(400).json({ error: "child_id requis" });
+      }
+
+      // Vérifier que l'enfant appartient bien à ce parent
+      const child = await User.findOne({
+        where: { id: child_id, parent_id: req.user.id },
+      });
+      if (!child) {
+        return res.status(404).json({ error: "Enfant introuvable" });
+      }
+
+      const logs = await Notification.getSupervisionLogs(
+        req.user.id,
+        child_id
+      );
+
+      res.json({
+        logs: logs.map((l) => ({
+          id: l.id,
+          title: l.title,
+          message: l.message,
+          action: l.metadata?.action,
+          created_at: l.created_at,
+          is_read: l.is_read,
+        })),
+      });
+    } catch (error) {
+      console.error("Erreur getSupervisionLogs:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des logs" });
+    }
+  }
 }
 
 module.exports = new ParentController();

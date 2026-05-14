@@ -91,6 +91,24 @@ class ParentApiService {
     }
   }
 
+  /// Récupérer le journal de supervision d'un enfant
+  /// GET /api/parent/child/supervision-logs?child_id=xxx
+  static Future<Map<String, dynamic>> getSupervisionLogs(String childId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/parent/child/supervision-logs?child_id=$childId'),
+        headers: await _authHeaders(),
+      );
+      final data = json.decode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, ...data};
+      }
+      return {'success': false, 'error': data['error'] ?? 'Erreur'};
+    } catch (e) {
+      return {'success': false, 'error': 'Erreur de connexion'};
+    }
+  }
+
   /// Supprimer le compte d'un enfant
   /// DELETE /api/parent/child
   static Future<Map<String, dynamic>> deleteChildAccount(String childId) async {
