@@ -8,15 +8,6 @@ const FROM_NAME = process.env.SMTP_FROM_NAME || "Sakinah";
 // Deep link scheme pour l'app mobile
 const DEEP_LINK_SCHEME = "sakinah://";
 
-// Validation de la clé API
-if (!BREVO_API_KEY) {
-  if (process.env.NODE_ENV === "production") {
-    console.error("❌ BREVO_API_KEY manquante en production!");
-  } else {
-    console.warn("⚠️ BREVO_API_KEY manquante - Les emails ne seront pas envoyés");
-  }
-}
-
 /**
  * Envoyer un email via l'API Brevo
  * @param {string} to - Email destinataire
@@ -44,7 +35,7 @@ async function sendEmail(to, subject, html) {
     const response = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
-        "accept": "application/json",
+        accept: "application/json",
         "api-key": BREVO_API_KEY,
         "content-type": "application/json",
       },
@@ -66,7 +57,7 @@ async function sendEmail(to, subject, html) {
     }
 
     const result = await response.json();
-    console.log("✅ [DEBUG] Email envoyé avec succès - ID:", result.messageId);
+
     return true;
   } catch (error) {
     console.error("❌ [DEBUG] Erreur envoi email:", error.message);
