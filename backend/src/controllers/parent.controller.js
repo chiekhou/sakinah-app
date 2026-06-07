@@ -6,6 +6,8 @@ const TestimonialLike = require("../models/TestimonialLike");
 const TestimonialComment = require("../models/TestimonialComment");
 const Notification = require("../models/Notification");
 const FCMToken = require("../models/FCMToken");
+const PendingProfileUpdate = require("../models/PendingProfileUpdate");
+const pushService = require("../services/push.service");
 const { sendEmail } = require("../services/email.service");
 
 class ParentController {
@@ -354,6 +356,153 @@ class ParentController {
     } catch (error) {
       console.error("Erreur getSupervisionLogs:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des logs" });
+    }
+  }
+  /**
+   * Récupérer les modifications de profil en attente pour un enfant
+   * GET /api/parent/child/pending-updates?child_id=xxx
+   */
+  async getPendingUpdates(req, res) {
+    try {
+      const { child_id } = req.query;
+      if (!child_id) {
+        return res.status(400).json({ error: "child_id requis" });
+      }
+
+      const child = await User.findOne({
+        where: { id: child_id, parent_id: req.user.id },
+      });
+      if (!child) {
+        return res.status(404).json({ error: "Enfant introuvable" });
+      }
+
+      const pending = await PendingProfileUpdate.findAll({
+        where: { user_id: child_id, status: "PENDING" },
+        order: [["created_at", "DESC"]],
+      });
+
+      res.json({
+        pending_updates: pending.map((p) => ({
+          id: p.id,
+          changes: p.changes,
+          created_at: p.created_at,
+        })),
+      });
+    } catch (error) {
+      console.error("Erreur getPendingUpdates:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération" });
+    }
+  }
+
+  /**
+   * Approuver une modification de profil — applique les changements
+   * POST /api/parent/child/approve-update
+   * Body: { update_id }
+   */
+  async approveUpdate(req, res) {
+    try {
+      const { update_id } = req.body;
+      if (!update_id) {
+        return res.status(400).json({ error: "update_id requis" });
+      }
+
+      const pending = await PendingProfileUpdate.findByPk(update_id);
+      if (!pending) {
+        return res.status(404).json({ error: "Demande introuvable" });
+      }
+
+      // Vérifier que l'enfant appartient bien à ce parent
+      const child = await User.findOne({
+        where: { id: pending.user_id, parent_id: req.user.id },
+      });
+      if (!child) {
+        return res.status(403).json({ error: "Accès refusé" });
+      }
+
+      if (pending.status !== "PENDING") {
+        return res.status(400).json({ error: "Cette demande a déjà été traitée" });
+      }
+
+      // Appliquer les changements au profil de l'enfant
+      const allowedFields = ["pseudo", "bio", "avatar_url"];
+      const updateData = {};
+      for (const key of allowedFields) {
+        if (pending.changes[key] !== undefined) {
+          updateData[key] = pending.changes[key];
+        }
+      }
+      await child.update(updateData);
+
+      // Marquer comme approuvé
+      await pending.update({ status: "APPROVED", reviewed_at: new Date() });
+
+      // Notifier l'enfant
+      pushService.sendToUser(
+        child.id,
+        {
+          title: "✅ Modification approuvée",
+          body: "Ton parent a approuvé la modification de ton profil.",
+        },
+        { type: "PROFILE_UPDATE_APPROVED" }
+      ).catch(() => {});
+
+      res.json({ message: "Modification approuvée et appliquée au profil." });
+    } catch (error) {
+      console.error("Erreur approveUpdate:", error);
+      res.status(500).json({ error: "Erreur lors de l'approbation" });
+    }
+  }
+
+  /**
+   * Rejeter une modification de profil
+   * POST /api/parent/child/reject-update
+   * Body: { update_id, reason? }
+   */
+  async rejectUpdate(req, res) {
+    try {
+      const { update_id, reason } = req.body;
+      if (!update_id) {
+        return res.status(400).json({ error: "update_id requis" });
+      }
+
+      const pending = await PendingProfileUpdate.findByPk(update_id);
+      if (!pending) {
+        return res.status(404).json({ error: "Demande introuvable" });
+      }
+
+      const child = await User.findOne({
+        where: { id: pending.user_id, parent_id: req.user.id },
+      });
+      if (!child) {
+        return res.status(403).json({ error: "Accès refusé" });
+      }
+
+      if (pending.status !== "PENDING") {
+        return res.status(400).json({ error: "Cette demande a déjà été traitée" });
+      }
+
+      await pending.update({
+        status: "REJECTED",
+        rejection_reason: reason || null,
+        reviewed_at: new Date(),
+      });
+
+      // Notifier l'enfant
+      pushService.sendToUser(
+        child.id,
+        {
+          title: "❌ Modification refusée",
+          body: reason
+            ? `Ton parent a refusé la modification : ${reason}`
+            : "Ton parent a refusé la modification de ton profil.",
+        },
+        { type: "PROFILE_UPDATE_REJECTED" }
+      ).catch(() => {});
+
+      res.json({ message: "Modification refusée." });
+    } catch (error) {
+      console.error("Erreur rejectUpdate:", error);
+      res.status(500).json({ error: "Erreur lors du refus" });
     }
   }
 }

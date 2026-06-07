@@ -367,6 +367,24 @@ function startDailyReminderCron() {
   console.log("✅ Cron job rappel quotidien planifié (tous les jours à 9h00 Paris)");
 }
 
+async function notifyAdminCriticalContent(testimonialId, authorPseudo) {
+  try {
+    const admins = await User.findAll({ where: { role: "ADMIN", status: "ACTIVE" } });
+    const adminIds = admins.map((a) => a.id);
+    if (adminIds.length === 0) return;
+    return sendToUsers(
+      adminIds,
+      {
+        title: "🚨 Contenu critique détecté",
+        body: `Un témoignage de ${authorPseudo || "un utilisateur"} contient des mots-clés de détresse. Intervention requise.`,
+      },
+      { type: "CRITICAL_CONTENT", testimonial_id: testimonialId },
+    );
+  } catch (e) {
+    console.error("notifyAdminCriticalContent error:", e);
+  }
+}
+
 module.exports = {
   sendToUser,
   sendToUsers,
@@ -377,6 +395,7 @@ module.exports = {
   notifyCommentApproved,
   notifyCommentRejected,
   notifyAdminNewTestimonial,
+  notifyAdminCriticalContent,
   sendDailyReminder,
   startDailyReminderCron,
 };

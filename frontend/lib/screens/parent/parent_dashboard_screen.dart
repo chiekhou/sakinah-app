@@ -15,6 +15,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   int _selectedIndex = 0;
   Map<String, dynamic>? _activities;
   List<Map<String, dynamic>> _supervisionLogs = [];
+  List<Map<String, dynamic>> _pendingUpdates = [];
   String? _error;
 
   @override
@@ -49,12 +50,16 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     final results = await Future.wait([
       ParentApiService.getChildActivities(childId),
       ParentApiService.getSupervisionLogs(childId),
+      ParentApiService.getPendingUpdates(childId),
     ]);
     if (mounted) {
       setState(() {
         _activities = results[0]['success'] == true ? results[0]['activities'] : null;
         _supervisionLogs = results[1]['success'] == true
             ? List<Map<String, dynamic>>.from(results[1]['logs'] ?? [])
+            : [];
+        _pendingUpdates = results[2]['success'] == true
+            ? List<Map<String, dynamic>>.from(results[2]['pending_updates'] ?? [])
             : [];
       });
     }
@@ -253,6 +258,10 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                     const SizedBox(height: 16),
                     if (_selectedChild != null) _buildChildCard(),
                     const SizedBox(height: 20),
+                    if (_pendingUpdates.isNotEmpty) ...[
+                      _buildPendingUpdatesCard(),
+                      const SizedBox(height: 20),
+                    ],
                     _buildMoodsCard(),
                     const SizedBox(height: 20),
                     _buildSupervisionCard(),
@@ -692,6 +701,168 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  String _pendingChangeLabel(String key) {
+    switch (key) {
+      case 'pseudo': return 'Pseudo';
+      case 'bio': return 'Description';
+      case 'avatar_url': return 'Photo de profil';
+      default: return key;
+    }
+  }
+
+  Future<void> _handleApprove(String updateId) async {
+    final result = await ParentApiService.approveUpdate(updateId);
+    if (!mounted) return;
+    if (result['success'] == true) {
+      _showSnack('Modification approuvée et appliquée.', isError: false);
+      final child = _selectedChild;
+      if (child != null) await _loadActivities(child['id']);
+    } else {
+      _showSnack(result['error'] ?? 'Erreur', isError: true);
+    }
+  }
+
+  Future<void> _handleReject(String updateId) async {
+    final result = await ParentApiService.rejectUpdate(updateId);
+    if (!mounted) return;
+    if (result['success'] == true) {
+      _showSnack('Modification refusée.', isError: false);
+      final child = _selectedChild;
+      if (child != null) await _loadActivities(child['id']);
+    } else {
+      _showSnack(result['error'] ?? 'Erreur', isError: true);
+    }
+  }
+
+  Widget _buildPendingUpdatesCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.orange[50],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.orange[300]!, width: 1.5),
+        boxShadow: AppTheme.softShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.pending_actions_rounded, color: Colors.orange[700], size: 22),
+              const SizedBox(width: 8),
+              Text(
+                'Modifications en attente',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange[800],
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.orange[700],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${_pendingUpdates.length}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Votre enfant souhaite modifier son profil. Votre approbation est requise.',
+            style: TextStyle(fontSize: 12, color: Colors.orange[800]),
+          ),
+          const SizedBox(height: 16),
+          ..._pendingUpdates.map((update) {
+            final changes = update['changes'] as Map<String, dynamic>? ?? {};
+            final updateId = update['id'] as String;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ...changes.entries.map((e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${_pendingChangeLabel(e.key)} : ',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            e.key == 'avatar_url' ? '(nouvelle photo)' : '${e.value}',
+                            style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _handleReject(updateId),
+                          icon: const Icon(Icons.close_rounded, size: 16),
+                          label: const Text('Refuser'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.errorColor,
+                            side: BorderSide(color: AppTheme.errorColor),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _handleApprove(updateId),
+                          icon: const Icon(Icons.check_rounded, size: 16),
+                          label: const Text('Approuver'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );

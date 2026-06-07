@@ -4,6 +4,8 @@ const TestimonialComment = require("../models/TestimonialComment");
 const Notification = require("../models/Notification");
 const User = require("../models/User");
 const pushService = require("../services/push.service");
+const { sendEmail } = require("../services/email.service");
+const { detectCrisis } = require("../services/crisis.service");
 
 /**
  * Controller pour gérer les témoignages
@@ -43,17 +45,93 @@ class TestimonialController {
       // Notifier les admins
       pushService.notifyAdminNewTestimonial(testimonial.id).catch(() => {});
 
-      // Log de supervision si l'auteur est un mineur
+      // Log de supervision + détection de crise
       const author = await User.findByPk(userId, {
-        attributes: ["is_minor", "parent_id", "pseudo", "username"],
+        attributes: ["is_minor", "parent_id", "pseudo", "username", "email"],
       });
+
+      const authorPseudo = author?.pseudo || author?.username || "Utilisateur";
+
+      // Log de supervision si l'auteur est un mineur
       if (author?.is_minor && author?.parent_id) {
         Notification.supervisionLog(
           author.parent_id,
           userId,
-          author.pseudo || author.username,
+          authorPseudo,
           "TESTIMONIAL"
         ).catch(() => {});
+      }
+
+      // Détection de crise
+      if (detectCrisis(content)) {
+        // Marquer le témoignage comme critique
+        testimonial.update({
+          is_critical: true,
+          critical_notified_at: new Date(),
+        }).catch(() => {});
+
+        // Alerter les admins en urgence
+        pushService.notifyAdminCriticalContent(testimonial.id, authorPseudo).catch(() => {});
+
+        // Email admin
+        const admins = await User.findAll({
+          where: { role: "ADMIN", status: "ACTIVE" },
+          attributes: ["email"],
+        });
+        admins.forEach((admin) => {
+          sendEmail(
+            admin.email,
+            "🚨 Sakinah — Contenu en détresse signalé",
+            `<div style="font-family:sans-serif;max-width:520px;margin:auto;">
+              <div style="background:#dc2626;padding:24px 32px;border-radius:12px 12px 0 0;">
+                <h2 style="margin:0;color:#fff;">🚨 Contenu critique détecté</h2>
+              </div>
+              <div style="background:#fff;padding:24px 32px;border:1px solid #e5e7eb;border-radius:0 0 12px 12px;">
+                <p>Un témoignage soumis par <strong>${authorPseudo}</strong> contient des mots-clés de détresse ou de danger.</p>
+                <p><strong>Action requise :</strong> Consulter ce témoignage en priorité dans le tableau de bord de modération.</p>
+                <p style="color:#6b7280;font-size:13px;">Si la situation l'exige, contactez le 119 (Allô Enfance en Danger) ou le 3114 (prévention suicide).</p>
+              </div>
+            </div>`
+          ).catch(() => {});
+        });
+
+        // Si mineur : notifier aussi le parent
+        if (author?.is_minor && author?.parent_id) {
+          const parent = await User.findByPk(author.parent_id, {
+            attributes: ["id", "email", "pseudo"],
+          });
+          if (parent) {
+            pushService.sendToUser(
+              parent.id,
+              {
+                title: "⚠️ Message important concernant votre enfant",
+                body: `Votre enfant a partagé un contenu préoccupant. Prenez contact avec lui dès que possible.`,
+              },
+              { type: "CHILD_CRITICAL_CONTENT" }
+            ).catch(() => {});
+
+            sendEmail(
+              parent.email,
+              "⚠️ Sakinah — Message important concernant votre enfant",
+              `<div style="font-family:sans-serif;max-width:520px;margin:auto;">
+                <div style="background:#f59e0b;padding:24px 32px;border-radius:12px 12px 0 0;">
+                  <h2 style="margin:0;color:#fff;">Message important</h2>
+                </div>
+                <div style="background:#fff;padding:24px 32px;border:1px solid #e5e7eb;border-radius:0 0 12px 12px;">
+                  <p>Bonjour ${parent.pseudo || ""},</p>
+                  <p>Votre enfant <strong>${authorPseudo}</strong> a partagé un message qui pourrait indiquer une situation de détresse.</p>
+                  <p><strong>Nous vous recommandons de prendre contact avec lui dès que possible.</strong></p>
+                  <p>Si vous pensez que votre enfant est en danger, contactez :</p>
+                  <ul>
+                    <li><strong>119</strong> — Allô Enfance en Danger (gratuit, 24h/24)</li>
+                    <li><strong>3114</strong> — Numéro national prévention suicide (gratuit, 24h/24)</li>
+                  </ul>
+                  <p style="color:#6b7280;font-size:13px;">Notre équipe de modération a également été alertée.</p>
+                </div>
+              </div>`
+            ).catch(() => {});
+          }
+        }
       }
 
       res.status(201).json({
