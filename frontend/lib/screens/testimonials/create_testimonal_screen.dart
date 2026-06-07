@@ -12,12 +12,27 @@ class CreateTestimonyScreen extends StatefulWidget {
   State<CreateTestimonyScreen> createState() => _CreateTestimonyScreenState();
 }
 
+const _crisisKeywords = [
+  'suicide', 'suicidaire', 'suicider', 'me suicider',
+  'envie de mourir', 'veux mourir', 'plus envie de vivre', 'mourir',
+  'me tuer', 'en finir', 'm\'en finir', 'mettre fin',
+  'automutilation', 'me couper', 'me blesser', 'me faire du mal',
+  'violé', 'violée', 'viol', 'maltraitance', 'abus sexuel',
+  'disparaître', 'mieux sans moi', 'je suis un fardeau',
+];
+
+bool _hasCrisisKeyword(String text) {
+  final lower = text.toLowerCase();
+  return _crisisKeywords.any((k) => lower.contains(k));
+}
+
 class _CreateTestimonyScreenState extends State<CreateTestimonyScreen> {
   final _formKey = GlobalKey<FormState>();
   final _contentController = TextEditingController();
   int? _selectedMoodLevel;
   bool _isAnonymous = true;
   bool _isLoading = false;
+  bool _showCrisisBanner = false;
 
   final List<Map<String, dynamic>> _moodLevels = [
     {'level': 1, 'emoji': '😢', 'label': 'Très mal', 'color': Colors.red},
@@ -43,6 +58,17 @@ class _CreateTestimonyScreenState extends State<CreateTestimonyScreen> {
       'color': Colors.green[700]!,
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _contentController.addListener(() {
+      final hasCrisis = _hasCrisisKeyword(_contentController.text);
+      if (hasCrisis != _showCrisisBanner) {
+        setState(() => _showCrisisBanner = hasCrisis);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -153,6 +179,26 @@ class _CreateTestimonyScreenState extends State<CreateTestimonyScreen> {
     }
   }
 
+  Widget _crisisHotline(String number, String label) {
+    return Row(
+      children: [
+        Text(
+          number,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+            color: Colors.red,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(fontSize: 13, color: Colors.red[700]),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -178,6 +224,47 @@ class _CreateTestimonyScreenState extends State<CreateTestimonyScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            // Bannière de crise
+            if (_showCrisisBanner) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.red[300]!, width: 1.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.favorite, color: Colors.red, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Tu n\'es pas seul(e)',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Si tu traverses une période très difficile, des professionnels sont disponibles pour t\'écouter gratuitement, 24h/24 :',
+                      style: TextStyle(fontSize: 13, color: Colors.red[800], height: 1.4),
+                    ),
+                    const SizedBox(height: 10),
+                    _crisisHotline('📞 3114', 'Numéro national prévention suicide'),
+                    const SizedBox(height: 6),
+                    _crisisHotline('📞 119', 'Allô Enfance en Danger'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             // Info card
             Container(
               padding: const EdgeInsets.all(16),

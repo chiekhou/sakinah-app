@@ -77,6 +77,17 @@ const Testimonial = sequelize.define(
       allowNull: true,
     },
 
+    // Signalement de crise
+    is_critical: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+    },
+    critical_notified_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
     // Engagement
     likes_count: {
       type: DataTypes.INTEGER,

@@ -24,11 +24,32 @@ class _TestimonyDetailScreenState extends State<TestimonyDetailScreen> {
 
   final _commentController = TextEditingController();
   bool _isSubmittingComment = false;
+  bool _showCrisisBanner = false;
+
+  static const _crisisKeywords = [
+    'suicide', 'suicidaire', 'suicider', 'me suicider',
+    'envie de mourir', 'veux mourir', 'plus envie de vivre', 'mourir',
+    'me tuer', 'en finir', "m'en finir", 'mettre fin',
+    'automutilation', 'me couper', 'me blesser', 'me faire du mal',
+    'violé', 'violée', 'viol', 'maltraitance', 'abus sexuel',
+    'disparaître', 'mieux sans moi', 'je suis un fardeau',
+  ];
+
+  bool _hasCrisisKeyword(String text) {
+    final lower = text.toLowerCase();
+    return _crisisKeywords.any((k) => lower.contains(k));
+  }
 
   @override
   void initState() {
     super.initState();
     _loadTestimony();
+    _commentController.addListener(() {
+      final hasCrisis = _hasCrisisKeyword(_commentController.text);
+      if (hasCrisis != _showCrisisBanner) {
+        setState(() => _showCrisisBanner = hasCrisis);
+      }
+    });
   }
 
   @override
@@ -535,7 +556,54 @@ class _TestimonyDetailScreenState extends State<TestimonyDetailScreen> {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_showCrisisBanner) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.red[300]!, width: 1.5),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.favorite, color: Colors.red, size: 16),
+                      SizedBox(width: 6),
+                      Text(
+                        'Tu n\'es pas seul(e)',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Si tu traverses une période difficile, appelle gratuitement :',
+                    style: TextStyle(fontSize: 12, color: Colors.red[800]),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '📞 3114  –  Prévention suicide     📞 119  –  Enfance en danger',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red[700],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          Row(
         children: [
           Expanded(
             child: TextField(
@@ -582,6 +650,8 @@ class _TestimonyDetailScreenState extends State<TestimonyDetailScreen> {
                     : const Icon(Icons.send, color: Colors.white, size: 24),
               ),
             ),
+          ),
+        ],
           ),
         ],
       ),

@@ -10,7 +10,7 @@ class SafetyService {
         'Authorization': 'Bearer $token',
       };
 
-  /// Enregistre que le mineur a lu et accepté le rappel de sécurité.
+  /// Enregistre que le mineur a accepté le rappel de sécurité.
   static Future<void> acknowledge(String token) async {
     final response = await http.post(
       Uri.parse('$_base/safety/acknowledge'),
@@ -33,15 +33,27 @@ class SafetyService {
     throw Exception(body['error'] ?? 'Erreur status');
   }
 
-  /// Notifie le parent qu'un mineur veut modifier ses informations personnelles.
-  static Future<void> requestProfileUpdate(String token) async {
+  /// Soumet une demande de modification de profil pour approbation parentale.
+  /// Les changements ne sont PAS appliqués immédiatement.
+  /// [changes] peut contenir : pseudo, bio, avatar_url
+  static Future<Map<String, dynamic>> requestProfileUpdate(
+    String token, {
+    String? pseudo,
+    String? bio,
+    String? avatarUrl,
+  }) async {
+    final body = <String, dynamic>{};
+    if (pseudo != null) body['pseudo'] = pseudo;
+    if (bio != null) body['bio'] = bio;
+    if (avatarUrl != null) body['avatar_url'] = avatarUrl;
+
     final response = await http.post(
       Uri.parse('$_base/safety/request-profile-update'),
       headers: _headers(token),
+      body: jsonEncode(body),
     );
-    final body = jsonDecode(response.body);
-    if (response.statusCode != 200) {
-      throw Exception(body['error'] ?? 'Erreur notification parent');
-    }
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) return data;
+    throw Exception(data['error'] ?? 'Erreur notification parent');
   }
 }

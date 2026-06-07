@@ -83,43 +83,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    // Pour les mineurs : notifier le parent (supervision) puis autoriser la modification
-    if (authProvider.isMinor && authProvider.token != null) {
-      try {
-        await SafetyService.requestProfileUpdate(authProvider.token!);
-      } catch (_) {}
-      if (!mounted) return;
-      // Informer l'enfant que son parent a été notifié
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Ton parent a été informé'),
-          content: const Text(
-            'Ton parent reçoit une notification et un email '
-            'pour superviser cette modification.',
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2ECC71)),
-              child: const Text('Continuer', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      );
-      if (!mounted) return;
-      // La modification continue après confirmation
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      // 1. Upload avatar si changé
+      final token = authProvider.token ?? await ApiService.getToken();
+      if (token == null) throw Exception('Non connecté');
+
+      // Upload avatar si changé (pour tous les profils)
       String? newAvatarUrl;
       if (_newAvatarFile != null) {
         final result = await ApiService.uploadAvatar(_newAvatarFile!.path);
@@ -130,12 +100,41 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         }
       }
 
-      // 2. Mettre à jour le profil
-      final token = authProvider.token ?? await ApiService.getToken();
-      if (token == null) {
-        throw Exception('Non connecté');
+      // --- MINEUR : soumettre pour approbation parentale ---
+      if (authProvider.isMinor) {
+        await SafetyService.requestProfileUpdate(
+          token,
+          pseudo: _pseudoController.text.trim(),
+          bio: _bioController.text.trim(),
+          avatarUrl: newAvatarUrl,
+        );
+
+        if (!mounted) return;
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text('Demande envoyée à ton parent'),
+            content: const Text(
+              'Ton parent a reçu une notification et un email.\n\n'
+              'Tes modifications seront appliquées dès qu\'il les aura approuvées depuis son Espace Parent.',
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2ECC71)),
+                child: const Text('OK', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        );
+        if (mounted) Navigator.pop(context);
+        return;
       }
 
+      // --- ADULTE : mise à jour directe ---
       final updateData = {
         'pseudo': _pseudoController.text.trim(),
         'bio': _bioController.text.trim(),
@@ -145,9 +144,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final response = await ApiService.updateProfile(token, updateData);
 
       if (response['success'] == true) {
-        // Recharger les données utilisateur
         await authProvider.refreshUser();
-
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -170,11 +167,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

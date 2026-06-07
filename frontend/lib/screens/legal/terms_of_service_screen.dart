@@ -56,7 +56,7 @@ class TermsOfServiceScreen extends StatelessWidget {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          'Dernière mise à jour : Février 2025',
+                          'Dernière mise à jour : Mai 2026',
                           style: TextStyle(fontSize: 13, color: Colors.white70),
                         ),
                       ],
@@ -162,6 +162,53 @@ class TermsOfServiceScreen extends StatelessWidget {
                 _buildBulletPoint('Suspension temporaire du compte'),
                 _buildBulletPoint(
                   'Bannissement définitif en cas de récidive grave',
+                ),
+              ],
+            ),
+
+            _buildImportantNotice(
+              'Détection automatique de contenu en détresse',
+              'Sakinah analyse automatiquement les témoignages et commentaires pour détecter '
+                  'des signaux de détresse (mots-clés liés au suicide, à l\'automutilation ou aux abus). '
+                  'En cas de détection :\n\n'
+                  '• Notre équipe de modération est alertée immédiatement\n'
+                  '• Le parent ou tuteur légal est notifié si l\'auteur est mineur\n'
+                  '• Aucune information identifiable n\'est partagée publiquement\n\n'
+                  'Cette mesure vise uniquement à protéger les utilisateurs en situation de vulnérabilité.',
+            ),
+
+            _buildSection(
+              'Ressources d\'aide disponibles',
+              'Si tu traverses une période difficile, des professionnels sont disponibles gratuitement, 24h/24 :',
+              children: [
+                _buildBulletPoint('📞 3114 — Numéro national de prévention du suicide'),
+                _buildBulletPoint('📞 119 — Allô Enfance en Danger'),
+                _buildBulletPoint('📞 3018 — Numéro contre le cyberharcèlement'),
+                _buildBulletPoint('Sakinah ne remplace pas ces services d\'urgence'),
+              ],
+            ),
+
+            _buildSection(
+              'Protection des mineurs',
+              null,
+              children: [
+                _buildBulletPoint(
+                  'Les comptes mineurs nécessitent le consentement parental',
+                ),
+                _buildBulletPoint(
+                  'Un espace parent permet de superviser l\'activité de l\'enfant',
+                ),
+                _buildBulletPoint(
+                  'Les publications communautaires des mineurs sont soumises à l\'autorisation parentale',
+                ),
+                _buildBulletPoint(
+                  'Un rappel de sécurité est affiché avant tout partage de contenu',
+                ),
+                _buildBulletPoint(
+                  'En cas de contenu préoccupant, le parent et l\'équipe de modération sont alertés',
+                ),
+                _buildBulletPoint(
+                  'Aucune interaction directe avec des inconnus n\'est possible',
                 ),
               ],
             ),

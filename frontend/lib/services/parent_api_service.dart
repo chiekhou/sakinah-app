@@ -202,6 +202,60 @@ class ParentApiService {
     }
   }
 
+  /// Récupérer les modifications de profil en attente d'approbation
+  /// GET /api/parent/child/pending-updates?child_id=xxx
+  static Future<Map<String, dynamic>> getPendingUpdates(String childId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/parent/child/pending-updates?child_id=$childId'),
+        headers: await _authHeaders(),
+      );
+      final data = json.decode(response.body);
+      if (response.statusCode == 200) return {'success': true, ...data};
+      return {'success': false, 'error': data['error'] ?? 'Erreur'};
+    } catch (e) {
+      return {'success': false, 'error': 'Erreur de connexion'};
+    }
+  }
+
+  /// Approuver une modification de profil
+  /// POST /api/parent/child/approve-update
+  static Future<Map<String, dynamic>> approveUpdate(String updateId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/parent/child/approve-update'),
+        headers: await _authHeaders(),
+        body: json.encode({'update_id': updateId}),
+      );
+      final data = json.decode(response.body);
+      if (response.statusCode == 200) return {'success': true, ...data};
+      return {'success': false, 'error': data['error'] ?? 'Erreur'};
+    } catch (e) {
+      return {'success': false, 'error': 'Erreur de connexion'};
+    }
+  }
+
+  /// Rejeter une modification de profil
+  /// POST /api/parent/child/reject-update
+  static Future<Map<String, dynamic>> rejectUpdate(String updateId,
+      {String? reason}) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/parent/child/reject-update'),
+        headers: await _authHeaders(),
+        body: json.encode({
+          'update_id': updateId,
+          if (reason != null) 'reason': reason,
+        }),
+      );
+      final data = json.decode(response.body);
+      if (response.statusCode == 200) return {'success': true, ...data};
+      return {'success': false, 'error': data['error'] ?? 'Erreur'};
+    } catch (e) {
+      return {'success': false, 'error': 'Erreur de connexion'};
+    }
+  }
+
   /// Envoyer une demande de suppression de compte
   /// POST /api/parent/delete-request
   static Future<Map<String, dynamic>> sendDeleteRequest() async {

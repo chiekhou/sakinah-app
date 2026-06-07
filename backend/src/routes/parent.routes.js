@@ -49,4 +49,8 @@ router.patch("/child/permissions", requireParent, parentController.toggleChildPo
  */
 router.get("/child/supervision-logs", requireParent, parentController.getSupervisionLogs);
 
+router.get("/child/pending-updates", requireParent, parentController.getPendingUpdates);
+router.post("/child/approve-update", requireParent, parentController.approveUpdate);
+router.post("/child/reject-update", requireParent, parentController.rejectUpdate);
+
 module.exports = router;
