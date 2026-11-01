@@ -217,10 +217,28 @@ DIRECTIVES IMPORTANTES:
     const result = await this.callAPIWithRetry(messages, userMood);
 
     if (result.success) {
-      const aiResponse = result.data.content[0].text;
+      // Ne garder que les blocs texte (le premier bloc n'est pas forcément du texte)
+      const aiResponse = (result.data.content || [])
+        .filter((block) => block.type === "text")
+        .map((block) => block.text)
+        .join("")
+        .trim();
+
+      if (aiResponse) {
+        return {
+          response: aiResponse,
+          isEmergency: false,
+        };
+      }
+
+      console.error(
+        `[ChatAI] Réponse vide (model: ${result.data.model}, stop_reason: ${result.data.stop_reason})`
+      );
       return {
-        response: aiResponse,
+        response: this.errorMessages.default.response,
         isEmergency: false,
+        error: true,
+        errorType: "empty_response",
       };
     }
 
