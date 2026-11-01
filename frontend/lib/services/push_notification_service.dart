@@ -1,9 +1,13 @@
 import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:sakinah_app/screens/testimonials/testimony_details_screen.dart';
+import 'package:sakinah_app/screens/parent/parent_dashboard_screen.dart';
+import 'package:sakinah_app/screens/users/edit_profile_screen.dart';
 import 'package:sakinah_app/services/api_service.dart';
+import 'package:sakinah_app/services/deep_link_service.dart';
 
 /// Handler pour les messages en arrière-plan (doit être top-level)
 @pragma('vm:entry-point')
@@ -185,19 +189,40 @@ class PushNotificationService {
 
   /// Gérer le tap sur une notification
   static void _handleNotificationTap(RemoteMessage message) {
-    // PRODUCTION: Log sensible désactivé (expose données notification)
-    // debugPrint('📱 Notification tapée: ${message.data}');
+    final data = message.data;
+    final type = data['type'] as String?;
+    final navigator = DeepLinkService.navigatorKey.currentState;
+    if (navigator == null || type == null) return;
 
-    // TODO: Naviguer vers l'écran approprié selon le type de notification
-    final type = message.data['type'];
     switch (type) {
+      // --- Témoignage ---
       case 'TESTIMONIAL_APPROVED':
       case 'TESTIMONIAL_LIKED':
       case 'TESTIMONIAL_COMMENTED':
-        // Naviguer vers le témoignage
+      case 'NEW_TESTIMONIAL_PENDING':
+      case 'CRITICAL_CONTENT':
+        final testimonialId = data['testimonial_id'] as String?;
+        if (testimonialId != null) {
+          navigator.push(MaterialPageRoute(
+            builder: (_) => TestimonyDetailScreen(testimonialId: testimonialId),
+          ));
+        }
         break;
-      case 'DAILY_REMINDER':
-        // Naviguer vers la page d'humeur
+
+      // --- Espace parent : modification en attente / contenu critique enfant ---
+      case 'PROFILE_UPDATE_PENDING':
+      case 'CHILD_CRITICAL_CONTENT':
+        navigator.push(MaterialPageRoute(
+          builder: (_) => const ParentDashboardScreen(),
+        ));
+        break;
+
+      // --- Enfant : résultat de sa demande de modification ---
+      case 'PROFILE_UPDATE_APPROVED':
+      case 'PROFILE_UPDATE_REJECTED':
+        navigator.push(MaterialPageRoute(
+          builder: (_) => const EditProfileScreen(),
+        ));
         break;
     }
   }

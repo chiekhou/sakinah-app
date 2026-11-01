@@ -173,6 +173,17 @@ class AuthProvider with ChangeNotifier {
   /// Vérifier si le mineur est autorisé à publier du contenu communautaire
   /// (toujours true pour les non-mineurs)
   bool get canPostContent {
-    return _currentUser?['can_post_content'] != false;
+    if (!isMinor) return true;
+    // Champ top-level présent (réponse du login)
+    if (_currentUser?.containsKey('can_post_content') == true) {
+      return _currentUser!['can_post_content'] == true;
+    }
+    // Fallback : champ imbriqué dans accessibility_settings (réponse de getMe)
+    final settings = _currentUser?['accessibility_settings'];
+    if (settings is Map) {
+      return settings['can_post_content'] == true;
+    }
+    // Par défaut : les mineurs ne peuvent pas poster sans permission explicite
+    return false;
   }
 }
