@@ -829,31 +829,37 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton.icon(
+                        child: ElevatedButton(
                           onPressed: () => _handleReject(updateId),
-                          icon: const Icon(Icons.close_rounded, size: 16),
-                          label: const Text('Refuser'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppTheme.errorColor,
-                            side: BorderSide(color: AppTheme.errorColor),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.errorColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
+                          ),
+                          child: const Text(
+                            'Refuser',
+                            style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: ElevatedButton.icon(
+                        child: ElevatedButton(
                           onPressed: () => _handleApprove(updateId),
-                          icon: const Icon(Icons.check_rounded, size: 16),
-                          label: const Text('Approuver'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.primaryColor,
                             foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
+                          ),
+                          child: const Text(
+                            'Approuver',
+                            style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),

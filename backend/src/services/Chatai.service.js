@@ -5,7 +5,7 @@ class ChatAIService {
     this.apiKey = process.env.AI_API_KEY;
     this.apiUrl =
       process.env.AI_API_URL || "https://api.anthropic.com/v1/messages";
-    this.model = "claude-sonnet-4-20250514";
+    this.model = process.env.AI_MODEL || "claude-sonnet-4-20250514";
 
     // Configuration retry
     this.maxRetries = 3;
